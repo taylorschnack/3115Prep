@@ -35,7 +35,7 @@ A web application designed to help tax professionals (CPAs and accountants) effi
 - Contextual help explaining each field's requirements
 
 ### 3. Designated Change Number (DCN) Database
-- Searchable database of all current DCNs from Rev. Proc. 2023-34 (and updates)
+- Searchable database of all current DCNs from Rev. Proc. 2025-23 (and updates)
 - Filter by:
   - Accounting method category (depreciation, inventory, revenue recognition, etc.)
   - Automatic vs. non-automatic
@@ -325,5 +325,5 @@ DCN_Reference (static reference data)
 
 **Purpose:** Request IRS consent to change an accounting method
 **Authority:** IRC Section 446(e)
-**Current Guidance:** Rev. Proc. 2023-34 (automatic changes), Rev. Proc. 2015-13 (general procedures)
+**Current Guidance:** Rev. Proc. 2025-23 (automatic changes), Rev. Proc. 2015-13 (general procedures)
 **Filing:** Attach to timely filed tax return (including extensions) for year of change; copy to IRS Ogden office for automatic changes

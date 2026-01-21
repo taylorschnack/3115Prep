@@ -12,7 +12,13 @@
       "Bash(npm uninstall:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(npm run db:seed:*)"
+      "Bash(npm run db:seed:*)",
+      "Bash(git push:*)",
+      "Bash(npm run dev:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 102312 -Force -ErrorAction SilentlyContinue; Remove-Item -Force -Recurse ''.next\\\\dev'' -ErrorAction SilentlyContinue\")"
     ]
   }
 }

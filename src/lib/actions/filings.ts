@@ -170,6 +170,16 @@ export async function updateFilingPartII(id: string, formData: FormData) {
 
   const dcn = formData.get("dcn") as string
   const changeType = formData.get("changeType") as string
+  const dcnDetailsRaw = formData.get("dcnDetails") as string
+
+  let dcnDetails = null
+  if (dcnDetailsRaw) {
+    try {
+      dcnDetails = JSON.parse(dcnDetailsRaw)
+    } catch {
+      // Invalid JSON, ignore
+    }
+  }
 
   const partIIData = {
     dcn,
@@ -180,6 +190,7 @@ export async function updateFilingPartII(id: string, formData: FormData) {
     isAutomaticChange: changeType === "automatic",
     yearOfChangeReason: formData.get("yearOfChangeReason"),
     irsConsentDate: formData.get("irsConsentDate"),
+    dcnDetails,
   }
 
   await db.filing.update({
@@ -356,6 +367,222 @@ export async function updateFilingPartIV(id: string, formData: FormData) {
       status: "in_progress",
       lastSavedStep: "part-iv",
       completionPercentage: 100,
+    },
+  })
+
+  revalidatePath(`/filings/${id}`)
+  return { success: true }
+}
+
+export async function updateFilingScheduleA(id: string, formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  const filing = await db.filing.findFirst({
+    where: { id, client: { userId: session.user.id } },
+  })
+
+  if (!filing) {
+    return { error: "Filing not found" }
+  }
+
+  const scheduleAData = {
+    currentOverallMethod: formData.get("currentOverallMethod"),
+    proposedOverallMethod: formData.get("proposedOverallMethod"),
+    grossReceiptsTest: formData.get("grossReceiptsTest"),
+    averageGrossReceipts: formData.get("averageGrossReceipts"),
+    qualifiesAsSmallBusiness: formData.get("qualifiesAsSmallBusiness"),
+    inventoryMethod: formData.get("inventoryMethod"),
+    hasInventory: formData.get("hasInventory"),
+    section448Applies: formData.get("section448Applies"),
+    section448Exception: formData.get("section448Exception"),
+    additionalInfo: formData.get("additionalInfo"),
+  }
+
+  await db.filing.update({
+    where: { id },
+    data: {
+      scheduleA: JSON.stringify(scheduleAData),
+      status: "in_progress",
+      lastSavedStep: "schedule-a",
+    },
+  })
+
+  revalidatePath(`/filings/${id}`)
+  return { success: true }
+}
+
+export async function updateFilingScheduleB(id: string, formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  const filing = await db.filing.findFirst({
+    where: { id, client: { userId: session.user.id } },
+  })
+
+  if (!filing) {
+    return { error: "Filing not found" }
+  }
+
+  const scheduleBData = {
+    currentInventoryMethod: formData.get("currentInventoryMethod"),
+    proposedInventoryMethod: formData.get("proposedInventoryMethod"),
+    currentValuationMethod: formData.get("currentValuationMethod"),
+    proposedValuationMethod: formData.get("proposedValuationMethod"),
+    inventoryTypes: formData.get("inventoryTypes"),
+    lifoElection: formData.get("lifoElection"),
+    lifoMethod: formData.get("lifoMethod"),
+    lifoPoolingMethod: formData.get("lifoPoolingMethod"),
+    section263A: formData.get("section263A"),
+    section263AMethod: formData.get("section263AMethod"),
+    unicapMethod: formData.get("unicapMethod"),
+    simplifiedMethod: formData.get("simplifiedMethod"),
+    additionalInfo: formData.get("additionalInfo"),
+  }
+
+  await db.filing.update({
+    where: { id },
+    data: {
+      scheduleB: JSON.stringify(scheduleBData),
+      status: "in_progress",
+      lastSavedStep: "schedule-b",
+    },
+  })
+
+  revalidatePath(`/filings/${id}`)
+  return { success: true }
+}
+
+export async function updateFilingScheduleC(id: string, formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  const filing = await db.filing.findFirst({
+    where: { id, client: { userId: session.user.id } },
+  })
+
+  if (!filing) {
+    return { error: "Filing not found" }
+  }
+
+  const scheduleCData = {
+    assetDescription: formData.get("assetDescription"),
+    dateAcquired: formData.get("dateAcquired"),
+    currentMethod: formData.get("currentMethod"),
+    currentLife: formData.get("currentLife"),
+    currentConvention: formData.get("currentConvention"),
+    proposedMethod: formData.get("proposedMethod"),
+    proposedLife: formData.get("proposedLife"),
+    proposedConvention: formData.get("proposedConvention"),
+    section168Property: formData.get("section168Property"),
+    section197Intangible: formData.get("section197Intangible"),
+    bonusDepreciation: formData.get("bonusDepreciation"),
+    section179Election: formData.get("section179Election"),
+    adsRequired: formData.get("adsRequired"),
+    changeReason: formData.get("changeReason"),
+    additionalInfo: formData.get("additionalInfo"),
+  }
+
+  await db.filing.update({
+    where: { id },
+    data: {
+      scheduleC: JSON.stringify(scheduleCData),
+      status: "in_progress",
+      lastSavedStep: "schedule-c",
+    },
+  })
+
+  revalidatePath(`/filings/${id}`)
+  return { success: true }
+}
+
+export async function updateFilingScheduleD(id: string, formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  const filing = await db.filing.findFirst({
+    where: { id, client: { userId: session.user.id } },
+  })
+
+  if (!filing) {
+    return { error: "Filing not found" }
+  }
+
+  const scheduleDData = {
+    contractType: formData.get("contractType"),
+    currentMethod: formData.get("currentMethod"),
+    proposedMethod: formData.get("proposedMethod"),
+    contractDescription: formData.get("contractDescription"),
+    estimatedDuration: formData.get("estimatedDuration"),
+    totalContractPrice: formData.get("totalContractPrice"),
+    completionPercentage: formData.get("completionPercentage"),
+    section460Applies: formData.get("section460Applies"),
+    homeConstructionContract: formData.get("homeConstructionContract"),
+    exemptSmallConstruction: formData.get("exemptSmallConstruction"),
+    lookBackMethod: formData.get("lookBackMethod"),
+    simplifiedMethod: formData.get("simplifiedMethod"),
+    additionalInfo: formData.get("additionalInfo"),
+  }
+
+  await db.filing.update({
+    where: { id },
+    data: {
+      scheduleD: JSON.stringify(scheduleDData),
+      status: "in_progress",
+      lastSavedStep: "schedule-d",
+    },
+  })
+
+  revalidatePath(`/filings/${id}`)
+  return { success: true }
+}
+
+export async function updateFilingScheduleE(id: string, formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  const filing = await db.filing.findFirst({
+    where: { id, client: { userId: session.user.id } },
+  })
+
+  if (!filing) {
+    return { error: "Filing not found" }
+  }
+
+  const scheduleEData = {
+    traderStatus: formData.get("traderStatus"),
+    electionType: formData.get("electionType"),
+    securityTypes: formData.get("securityTypes"),
+    currentMethod: formData.get("currentMethod"),
+    proposedMethod: formData.get("proposedMethod"),
+    section475Election: formData.get("section475Election"),
+    electionYear: formData.get("electionYear"),
+    priorElection: formData.get("priorElection"),
+    businessDescription: formData.get("businessDescription"),
+    tradingFrequency: formData.get("tradingFrequency"),
+    averageHoldingPeriod: formData.get("averageHoldingPeriod"),
+    substantialActivity: formData.get("substantialActivity"),
+    separateAccounts: formData.get("separateAccounts"),
+    hedgingTransactions: formData.get("hedgingTransactions"),
+    additionalInfo: formData.get("additionalInfo"),
+  }
+
+  await db.filing.update({
+    where: { id },
+    data: {
+      scheduleE: JSON.stringify(scheduleEData),
+      status: "in_progress",
+      lastSavedStep: "schedule-e",
     },
   })
 
