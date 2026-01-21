@@ -5,13 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
@@ -20,7 +14,10 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { updateFilingPartII } from "@/lib/actions/filings"
+import { DcnLookup } from "@/components/dcn-lookup"
+import { type DcnReference } from "@/lib/actions/dcn"
 import { toast } from "sonner"
+import { Info, AlertCircle } from "lucide-react"
 
 type PartIIData = {
   dcn?: string
@@ -30,6 +27,16 @@ type PartIIData = {
   proposedMethod?: string
   yearOfChangeReason?: string
   irsConsentDate?: string
+  dcnDetails?: {
+    isAutomatic: boolean
+    requires481a: boolean
+    spreadPeriod: number | null
+    requiresScheduleA: boolean
+    requiresScheduleB: boolean
+    requiresScheduleC: boolean
+    requiresScheduleD: boolean
+    requiresScheduleE: boolean
+  }
 }
 
 interface FilingPartIIProps {
@@ -39,9 +46,32 @@ interface FilingPartIIProps {
 
 export function FilingPartII({ filingId, initialData }: FilingPartIIProps) {
   const [saving, setSaving] = useState(false)
+  const [selectedDcn, setSelectedDcn] = useState<DcnReference | null>(null)
+  const [dcnNumber, setDcnNumber] = useState(initialData?.dcn || "")
+
+  function handleDcnSelect(dcn: DcnReference) {
+    setSelectedDcn(dcn)
+    setDcnNumber(dcn.dcnNumber)
+  }
 
   async function handleSubmit(formData: FormData) {
     setSaving(true)
+
+    // Add DCN details if selected
+    if (selectedDcn) {
+      formData.set("dcnDetails", JSON.stringify({
+        isAutomatic: selectedDcn.isAutomatic,
+        requires481a: selectedDcn.requires481a,
+        spreadPeriod: selectedDcn.spreadPeriod,
+        requiresScheduleA: selectedDcn.requiresScheduleA,
+        requiresScheduleB: selectedDcn.requiresScheduleB,
+        requiresScheduleC: selectedDcn.requiresScheduleC,
+        requiresScheduleD: selectedDcn.requiresScheduleD,
+        requiresScheduleE: selectedDcn.requiresScheduleE,
+      }))
+      formData.set("changeType", selectedDcn.isAutomatic ? "automatic" : "non_automatic")
+    }
+
     const result = await updateFilingPartII(filingId, formData)
     setSaving(false)
 
@@ -51,6 +81,8 @@ export function FilingPartII({ filingId, initialData }: FilingPartIIProps) {
       toast.success("Part II saved successfully")
     }
   }
+
+  const dcnDetails = selectedDcn || initialData?.dcnDetails
 
   return (
     <form action={handleSubmit}>
@@ -63,32 +95,67 @@ export function FilingPartII({ filingId, initialData }: FilingPartIIProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="dcn">Designated Change Number (DCN)</Label>
-                <Input
-                  id="dcn"
-                  name="dcn"
-                  placeholder="e.g., 7"
-                  defaultValue={initialData?.dcn || ""}
-                />
+                <Label>Designated Change Number (DCN)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    name="dcn"
+                    placeholder="e.g., 7"
+                    value={dcnNumber}
+                    onChange={(e) => setDcnNumber(e.target.value)}
+                    className="flex-1"
+                  />
+                  <DcnLookup onSelect={handleDcnSelect} selectedDcn={dcnNumber} />
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Enter the DCN from Rev. Proc. 2023-34 (or current guidance)
+                  Use the lookup to find the correct DCN from Rev. Proc. 2023-34
                 </p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="changeType">Type of Change</Label>
-                <Select name="changeType" defaultValue={initialData?.changeType || ""}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select change type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="automatic">Automatic Change</SelectItem>
-                    <SelectItem value="non_automatic">Non-Automatic Change</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
+              {dcnDetails && (
+                <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Info className="h-4 w-4 text-primary" />
+                    <span className="font-medium">DCN {dcnNumber} Requirements</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={dcnDetails.isAutomatic ? "default" : "secondary"}>
+                      {dcnDetails.isAutomatic ? "Automatic Change" : "Non-Automatic Change"}
+                    </Badge>
+                    {dcnDetails.requires481a && (
+                      <Badge variant="outline">Section 481(a) Adjustment Required</Badge>
+                    )}
+                    {dcnDetails.spreadPeriod && (
+                      <Badge variant="outline">{dcnDetails.spreadPeriod}-Year Spread Period</Badge>
+                    )}
+                  </div>
+                  {(dcnDetails.requiresScheduleA || dcnDetails.requiresScheduleB ||
+                    dcnDetails.requiresScheduleC || dcnDetails.requiresScheduleD ||
+                    dcnDetails.requiresScheduleE) && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>
+                        Required schedules:{" "}
+                        {[
+                          dcnDetails.requiresScheduleA && "A",
+                          dcnDetails.requiresScheduleB && "B",
+                          dcnDetails.requiresScheduleC && "C",
+                          dcnDetails.requiresScheduleD && "D",
+                          dcnDetails.requiresScheduleE && "E",
+                        ].filter(Boolean).join(", ")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
+            <input
+              type="hidden"
+              name="changeType"
+              value={dcnDetails?.isAutomatic ? "automatic" : initialData?.changeType || ""}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="changeDescription">Description of the change in accounting method</Label>
@@ -153,42 +220,9 @@ export function FilingPartII({ filingId, initialData }: FilingPartIIProps) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Common DCN References</CardTitle>
-            <CardDescription>
-              Quick reference for frequently used Designated Change Numbers
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2 text-sm">
-              <div className="flex justify-between py-2 border-b">
-                <span className="font-medium">DCN 7</span>
-                <span className="text-muted-foreground">Change to overall cash method</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <span className="font-medium">DCN 184</span>
-                <span className="text-muted-foreground">Tangible property - materials and supplies</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <span className="font-medium">DCN 205</span>
-                <span className="text-muted-foreground">Depreciation - late election</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <span className="font-medium">DCN 233</span>
-                <span className="text-muted-foreground">Revenue recognition under ASC 606</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="font-medium">DCN 236</span>
-                <span className="text-muted-foreground">Research and experimental expenditures</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <div className="flex gap-4">
           <Button type="submit" disabled={saving}>
-            {saving ? "Saving..." : "Save Part II"}
+            {saving ? "Saving..." : "Save Part II & Continue"}
           </Button>
         </div>
       </div>

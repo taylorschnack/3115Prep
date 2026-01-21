@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getFiling } from "@/lib/actions/filings"
 import { FilingPartI } from "@/components/filing-part-i"
 import { FilingPartII } from "@/components/filing-part-ii"
+import { FilingPartIII } from "@/components/filing-part-iii"
+import { FilingPartIV } from "@/components/filing-part-iv"
 
 const statusLabels: Record<string, string> = {
   draft: "Draft",
@@ -29,6 +31,13 @@ export default async function FilingPage({
 
   const partIData = filing.partI ? JSON.parse(filing.partI) : null
   const partIIData = filing.partII ? JSON.parse(filing.partII) : null
+  const partIIIData = filing.partIII ? JSON.parse(filing.partIII) : null
+  const partIVData = filing.partIV ? JSON.parse(filing.partIV) : null
+
+  // Extract DCN details from partII for Part IV requirements
+  const dcnDetails = partIIData?.dcnDetails || null
+  const requires481a = dcnDetails?.requires481a ?? true
+  const suggestedSpreadPeriod = dcnDetails?.spreadPeriod ?? null
 
   return (
     <div className="space-y-6">

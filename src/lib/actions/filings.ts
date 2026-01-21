@@ -250,3 +250,115 @@ export async function getClientsForSelect() {
 
   return clients
 }
+
+export async function updateFilingPartIII(id: string, formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  // Verify ownership
+  const filing = await db.filing.findFirst({
+    where: {
+      id,
+      client: {
+        userId: session.user.id,
+      },
+    },
+  })
+
+  if (!filing) {
+    return { error: "Filing not found" }
+  }
+
+  const partIIIData = {
+    priorMethodChange: formData.get("priorMethodChange"),
+    priorMethodChangeYear: formData.get("priorMethodChangeYear"),
+    priorMethodChangeDcn: formData.get("priorMethodChangeDcn"),
+    transactionAdjustment: formData.get("transactionAdjustment"),
+    transactionAdjustmentDetails: formData.get("transactionAdjustmentDetails"),
+    consolidatedGroup: formData.get("consolidatedGroup"),
+    parentName: formData.get("parentName"),
+    parentEin: formData.get("parentEin"),
+    relatedEntities: formData.get("relatedEntities"),
+    relatedEntitiesDetails: formData.get("relatedEntitiesDetails"),
+    booksAndRecords: formData.get("booksAndRecords"),
+    booksAndRecordsExplanation: formData.get("booksAndRecordsExplanation"),
+    priorRequest: formData.get("priorRequest"),
+    priorRequestDetails: formData.get("priorRequestDetails"),
+    underExamination: formData.get("underExamination"),
+    examiningOffice: formData.get("examiningOffice"),
+    conferenceRequest: formData.get("conferenceRequest"),
+    additionalInfo: formData.get("additionalInfo"),
+  }
+
+  await db.filing.update({
+    where: { id },
+    data: {
+      partIII: JSON.stringify(partIIIData),
+      status: "in_progress",
+      lastSavedStep: "part-iii",
+      completionPercentage: 75,
+    },
+  })
+
+  revalidatePath(`/filings/${id}`)
+  return { success: true }
+}
+
+export async function updateFilingPartIV(id: string, formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  // Verify ownership
+  const filing = await db.filing.findFirst({
+    where: {
+      id,
+      client: {
+        userId: session.user.id,
+      },
+    },
+  })
+
+  if (!filing) {
+    return { error: "Filing not found" }
+  }
+
+  const adjustmentAmount = parseFloat(formData.get("adjustmentAmount") as string) || 0
+  const spreadPeriodValue = parseInt(formData.get("spreadPeriod") as string) || 1
+
+  const partIVData = {
+    requires481a: formData.get("requires481a"),
+    presentMethodIncome: parseFloat(formData.get("presentMethodIncome") as string) || 0,
+    proposedMethodIncome: parseFloat(formData.get("proposedMethodIncome") as string) || 0,
+    adjustmentAmount,
+    adjustmentDirection: formData.get("adjustmentDirection"),
+    spreadPeriod: formData.get("spreadPeriod"),
+    yearOneAmount: parseFloat(formData.get("yearOneAmount") as string) || 0,
+    yearTwoAmount: parseFloat(formData.get("yearTwoAmount") as string) || 0,
+    yearThreeAmount: parseFloat(formData.get("yearThreeAmount") as string) || 0,
+    yearFourAmount: parseFloat(formData.get("yearFourAmount") as string) || 0,
+    calculationMethod: formData.get("calculationMethod"),
+    supportingDocuments: formData.get("supportingDocuments"),
+    hasNol: formData.get("hasNol"),
+    nolAmount: parseFloat(formData.get("nolAmount") as string) || 0,
+    nolYears: formData.get("nolYears"),
+  }
+
+  await db.filing.update({
+    where: { id },
+    data: {
+      partIV: JSON.stringify(partIVData),
+      section481aAdjustment: adjustmentAmount,
+      spreadPeriod: spreadPeriodValue,
+      status: "in_progress",
+      lastSavedStep: "part-iv",
+      completionPercentage: 100,
+    },
+  })
+
+  revalidatePath(`/filings/${id}`)
+  return { success: true }
+}

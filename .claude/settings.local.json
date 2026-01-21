@@ -10,7 +10,9 @@
       "Bash(npx prisma:*)",
       "Bash(npm run build:*)",
       "Bash(npm uninstall:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run db:seed:*)"
     ]
   }
 }
