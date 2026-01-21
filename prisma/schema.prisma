@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  firmName  String?
+  phone     String?
+
+  // Preparer info (default for filings)
+  preparerName    String?
+  preparerPtin    String?
+  preparerAddress String?
+
+  clients   Client[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Basic info
+  name        String
+  ein         String?
+  entityType  String?  // Corporation, Partnership, S-Corp, etc.
+
+  // Address
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+
+  // Contact
+  contactName String?
+  contactPhone String?
+  contactEmail String?
+
+  // Tax info
+  taxYearEnd  String?  // Month/Day (e.g., "12/31")
+
+  filings     Filing[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Filing {
+  id              String   @id @default(cuid())
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Filing basics
+  taxYearOfChange Int
+  status          String   @default("draft") // draft, in_progress, ready, completed
+
+  // DCN info
+  dcn             String?
+  changeType      String?  // automatic, non_automatic
+
+  // Form data stored as JSON
+  partI           String?  // JSON - Filer information
+  partII          String?  // JSON - Information about the change
+  partIII         String?  // JSON - Information about the requested change
+  partIV          String?  // JSON - Section 481(a) adjustment
+  scheduleA       String?  // JSON - Changes in overall method
+  scheduleB       String?  // JSON - Changes to inventory methods
+  scheduleC       String?  // JSON - Changes to depreciation/amortization
+  scheduleD       String?  // JSON - Changes for long-term contracts
+  scheduleE       String?  // JSON - Changes for mark-to-market
+
+  // Section 481(a) calculated values
+  section481aAdjustment Decimal?
+  spreadPeriod          Int?
+
+  // Metadata
+  completionPercentage  Int     @default(0)
+  lastSavedStep         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+// DCN Reference table (seeded with Rev. Proc. data)
+model DcnReference {
+  id              String   @id @default(cuid())
+  dcnNumber       String   @unique
+  description     String
+  category        String   // depreciation, inventory, revenue, etc.
+
+  isAutomatic     Boolean  @default(true)
+  requires481a    Boolean  @default(true)
+  spreadPeriod    Int?     // null = 1 year, 4 = 4 year spread
+
+  // Which form sections are required
+  requiresScheduleA Boolean @default(false)
+  requiresScheduleB Boolean @default(false)
+  requiresScheduleC Boolean @default(false)
+  requiresScheduleD Boolean @default(false)
+  requiresScheduleE Boolean @default(false)
+
+  revProcReference String?
+  effectiveDate    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
