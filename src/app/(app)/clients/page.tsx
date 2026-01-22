@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Plus, Search, MoreHorizontal, Building2 } from "lucide-react"
+import { Plus, MoreHorizontal, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,

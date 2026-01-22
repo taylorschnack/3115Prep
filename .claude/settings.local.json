@@ -18,7 +18,14 @@
       "mcp__ide__getDiagnostics",
       "Bash(tasklist:*)",
       "Bash(findstr:*)",
-      "Bash(powershell -Command \"Stop-Process -Id 102312 -Force -ErrorAction SilentlyContinue; Remove-Item -Force -Recurse ''.next\\\\dev'' -ErrorAction SilentlyContinue\")"
+      "Bash(powershell -Command \"Stop-Process -Id 102312 -Force -ErrorAction SilentlyContinue; Remove-Item -Force -Recurse ''.next\\\\dev'' -ErrorAction SilentlyContinue\")",
+      "Bash(powershell:*)",
+      "Bash(curl:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "WebSearch"
     ]
   }
 }

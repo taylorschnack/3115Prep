@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,7 +19,6 @@ import { login } from "@/lib/actions/auth"
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   async function handleSubmit(formData: FormData) {
     setLoading(true)

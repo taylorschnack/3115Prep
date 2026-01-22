@@ -3,7 +3,6 @@
 import { signIn, signOut } from "@/lib/auth"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import { redirect } from "next/navigation"
 
 export async function login(formData: FormData) {
   const email = formData.get("email") as string

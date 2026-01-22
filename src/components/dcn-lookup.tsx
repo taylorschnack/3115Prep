@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Search, Check, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { getAllDcns, getDcnsByCategory, DCN_CATEGORIES, type DcnReference } from "@/lib/actions/dcn"
+import { getAllDcns, type DcnReference } from "@/lib/actions/dcn"
+import { DCN_CATEGORIES } from "@/lib/constants/dcn"
 
 interface DcnLookupProps {
   onSelect: (dcn: DcnReference) => void
@@ -31,7 +32,6 @@ interface DcnLookupProps {
 export function DcnLookup({ onSelect, selectedDcn }: DcnLookupProps) {
   const [open, setOpen] = useState(false)
   const [dcns, setDcns] = useState<DcnReference[]>([])
-  const [filteredDcns, setFilteredDcns] = useState<DcnReference[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [loading, setLoading] = useState(true)
@@ -41,13 +41,12 @@ export function DcnLookup({ onSelect, selectedDcn }: DcnLookupProps) {
       setLoading(true)
       const data = await getAllDcns()
       setDcns(data)
-      setFilteredDcns(data)
       setLoading(false)
     }
     loadDcns()
   }, [])
 
-  useEffect(() => {
+  const filteredDcns = useMemo(() => {
     let filtered = dcns
 
     if (categoryFilter && categoryFilter !== "all") {
@@ -63,7 +62,7 @@ export function DcnLookup({ onSelect, selectedDcn }: DcnLookupProps) {
       )
     }
 
-    setFilteredDcns(filtered)
+    return filtered
   }, [searchQuery, categoryFilter, dcns])
 
   function handleSelect(dcn: DcnReference) {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,7 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { updateFilingPartIV } from "@/lib/actions/filings"
 import { toast } from "sonner"
-import { Calculator, AlertCircle, Info } from "lucide-react"
+import { Calculator, Info } from "lucide-react"
 
 type PartIVData = {
   // Does this change require a 481(a) adjustment?
