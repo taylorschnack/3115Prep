@@ -1,27 +1,7 @@
-import { auth } from "@/lib/auth"
-import { NextResponse } from "next/server"
+import NextAuth from "next-auth"
+import { authConfig } from "@/lib/auth.config"
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth
-  const isAuthPage = req.nextUrl.pathname.startsWith("/login") ||
-                     req.nextUrl.pathname.startsWith("/register")
-  const isProtectedRoute = req.nextUrl.pathname.startsWith("/dashboard") ||
-                          req.nextUrl.pathname.startsWith("/clients") ||
-                          req.nextUrl.pathname.startsWith("/filings") ||
-                          req.nextUrl.pathname.startsWith("/settings")
-
-  // Redirect logged-in users away from auth pages
-  if (isLoggedIn && isAuthPage) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl))
-  }
-
-  // Redirect non-logged-in users to login for protected routes
-  if (!isLoggedIn && isProtectedRoute) {
-    return NextResponse.redirect(new URL("/login", req.nextUrl))
-  }
-
-  return NextResponse.next()
-})
+export default NextAuth(authConfig).auth
 
 export const config = {
   matcher: [
