@@ -23,6 +23,8 @@ import { Badge } from "@/components/ui/badge"
 import { updateFilingPartIV } from "@/lib/actions/filings"
 import { toast } from "sonner"
 import { Calculator, Info } from "lucide-react"
+import { validatePartIV, formDataToObject, type ValidationResult } from "@/lib/validation"
+import { FieldError, ValidationSummary } from "@/components/ui/field-error"
 
 type PartIVData = {
   // Does this change require a 481(a) adjustment?
@@ -65,6 +67,7 @@ export function FilingPartIV({
   suggestedSpreadPeriod,
 }: FilingPartIVProps) {
   const [saving, setSaving] = useState(false)
+  const [validation, setValidation] = useState<ValidationResult>({ isValid: true, errors: {}, warnings: {} })
   const [presentMethodIncome, setPresentMethodIncome] = useState<number>(
     initialData?.presentMethodIncome || 0
   )
@@ -85,11 +88,25 @@ export function FilingPartIV({
   const yearlyAmount = spreadYears > 1 ? absAdjustment / spreadYears : absAdjustment
 
   async function handleSubmit(formData: FormData) {
-    setSaving(true)
-
-    // Add calculated values
+    // Add calculated values before validation
     formData.set("adjustmentAmount", adjustmentAmount.toString())
     formData.set("adjustmentDirection", adjustmentDirection)
+    formData.set("presentMethodIncome", presentMethodIncome.toString())
+    formData.set("proposedMethodIncome", proposedMethodIncome.toString())
+
+    // Validate before submission
+    const data = formDataToObject(formData)
+    const validationResult = validatePartIV(data, requires481a)
+    setValidation(validationResult)
+
+    if (!validationResult.isValid) {
+      toast.error("Please fix the validation errors before saving")
+      return
+    }
+
+    setSaving(true)
+
+    // Add spread amounts
     formData.set("yearOneAmount", (spreadYears === 1 ? absAdjustment : yearlyAmount).toString())
     if (spreadYears === 4) {
       formData.set("yearTwoAmount", yearlyAmount.toString())
@@ -144,6 +161,8 @@ export function FilingPartIV({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <ValidationSummary errors={validation.errors} warnings={validation.warnings} />
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Does this change require a Section 481(a) adjustment?</Label>
@@ -168,7 +187,7 @@ export function FilingPartIV({
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="presentMethodIncome">
-                    Cumulative income/deductions under PRESENT method
+                    Cumulative income/deductions under PRESENT method {requires481a && "*"}
                   </Label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
@@ -176,11 +195,12 @@ export function FilingPartIV({
                       id="presentMethodIncome"
                       name="presentMethodIncome"
                       type="number"
-                      className="pl-7"
+                      className={`pl-7 ${validation.errors.presentMethodIncome ? "border-destructive" : ""}`}
                       value={presentMethodIncome || ""}
                       onChange={(e) => setPresentMethodIncome(parseFloat(e.target.value) || 0)}
                     />
                   </div>
+                  <FieldError error={validation.errors.presentMethodIncome} />
                   <p className="text-xs text-muted-foreground">
                     Total amounts previously recognized under current method
                   </p>
@@ -188,7 +208,7 @@ export function FilingPartIV({
 
                 <div className="space-y-2">
                   <Label htmlFor="proposedMethodIncome">
-                    Cumulative income/deductions under PROPOSED method
+                    Cumulative income/deductions under PROPOSED method {requires481a && "*"}
                   </Label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
@@ -196,11 +216,12 @@ export function FilingPartIV({
                       id="proposedMethodIncome"
                       name="proposedMethodIncome"
                       type="number"
-                      className="pl-7"
+                      className={`pl-7 ${validation.errors.proposedMethodIncome ? "border-destructive" : ""}`}
                       value={proposedMethodIncome || ""}
                       onChange={(e) => setProposedMethodIncome(parseFloat(e.target.value) || 0)}
                     />
                   </div>
+                  <FieldError error={validation.errors.proposedMethodIncome} />
                   <p className="text-xs text-muted-foreground">
                     What would have been recognized under new method
                   </p>
@@ -236,13 +257,13 @@ export function FilingPartIV({
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Spread Period</Label>
+                <Label>Spread Period {requires481a && "*"}</Label>
                 <Select
                   name="spreadPeriod"
                   value={spreadPeriod}
                   onValueChange={setSpreadPeriod}
                 >
-                  <SelectTrigger className="w-[300px]">
+                  <SelectTrigger className={`w-[300px] ${validation.errors.spreadPeriod ? "border-destructive" : ""}`}>
                     <SelectValue placeholder="Select spread period" />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,11 +271,13 @@ export function FilingPartIV({
                     <SelectItem value="4">4 Years (spread evenly over 4 tax years)</SelectItem>
                   </SelectContent>
                 </Select>
+                <FieldError error={validation.errors.spreadPeriod} warning={validation.warnings.spreadPeriod} />
                 {suggestedSpreadPeriod && (
                   <p className="text-sm text-muted-foreground">
                     Suggested based on DCN: {suggestedSpreadPeriod === 4 ? "4-year spread" : "1-year adjustment"}
                   </p>
                 )}
+                <FieldError warning={validation.warnings.adjustmentAmount} />
               </div>
 
               {absAdjustment > 0 && (

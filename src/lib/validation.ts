@@ -125,7 +125,7 @@ export function validatePartII(data: Record<string, unknown>): ValidationResult 
   if (!data.dcn) {
     errors.dcn = "Designated Change Number (DCN) is required"
   } else if (!validateDcn(data.dcn as string)) {
-    warnings.dcn = "DCN format may be invalid - verify against Rev. Proc. 2023-34"
+    warnings.dcn = "DCN format may be invalid - verify against Rev. Proc. 2025-23"
   }
 
   if (!data.changeDescription) {
@@ -160,8 +160,22 @@ export function validatePartIII(data: Record<string, unknown>): ValidationResult
   const warnings: Record<string, string> = {}
 
   // Conditional validations
-  if (data.priorMethodChange === "yes" && !data.priorMethodChangeYear) {
-    errors.priorMethodChangeYear = "Year of prior change is required when prior change is indicated"
+  if (data.priorMethodChange === "yes") { // Only check if YES
+    if (!data.priorMethodChangeYear) {
+      errors.priorMethodChangeYear = "Year of prior change is required when prior change is indicated"
+    }
+  }
+
+  if (data.transactionAdjustment === "yes") { // Only check if YES
+    if (!data.transactionAdjustmentDetails) {
+      errors.transactionAdjustmentDetails = "Details are required when there is a transaction adjustment"
+    }
+  }
+
+  if (data.relatedEntities === "yes") { // Only check if YES
+    if (!data.relatedEntitiesDetails) {
+      errors.relatedEntitiesDetails = "Details are required when there are related entities"
+    }
   }
 
   if (data.consolidatedGroup === "yes") {
@@ -177,6 +191,12 @@ export function validatePartIII(data: Record<string, unknown>): ValidationResult
 
   if (data.underExamination === "yes" && !data.examiningOffice) {
     errors.examiningOffice = "Examining office is required when under examination"
+  }
+
+  if (data.priorRequest === "yes") { // Only check if YES
+    if (!data.priorRequestDetails) {
+      errors.priorRequestDetails = "Details are required when there was a prior request"
+    }
   }
 
   if (data.booksAndRecords === "no" && !data.booksAndRecordsExplanation) {
@@ -268,6 +288,205 @@ export function validateFiling(filing: {
     errors,
     warnings,
   }
+}
+
+// Validate Schedule A data (Overall Method Changes)
+export function validateScheduleA(data: Record<string, unknown>): ValidationResult {
+  const errors: Record<string, string> = {}
+  const warnings: Record<string, string> = {}
+
+  if (!data.currentOverallMethod) {
+    errors.currentOverallMethod = "Current overall method is required"
+  }
+
+  if (!data.proposedOverallMethod) {
+    errors.proposedOverallMethod = "Proposed overall method is required"
+  }
+
+  if (data.currentOverallMethod && data.proposedOverallMethod &&
+    data.currentOverallMethod === data.proposedOverallMethod) {
+    errors.proposedOverallMethod = "Proposed method must be different from current method"
+  }
+
+  if (!data.grossReceiptsTest) {
+    errors.grossReceiptsTest = "Gross receipts test answer is required"
+  }
+
+  // Warning for cash method with high gross receipts
+  if (data.proposedOverallMethod === "cash" && data.grossReceiptsTest === "no") {
+    const receipts = parseFloat(String(data.averageGrossReceipts || "0").replace(/[,$]/g, ''))
+    if (receipts > 30000000) {
+      warnings.averageGrossReceipts = "Taxpayer may not qualify for cash method with gross receipts exceeding $30 million"
+    }
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+    warnings,
+  }
+}
+
+// Validate Schedule B data (Inventory Methods)
+export function validateScheduleB(data: Record<string, unknown>): ValidationResult {
+  const errors: Record<string, string> = {}
+  const warnings: Record<string, string> = {}
+
+  if (!data.currentInventoryMethod) {
+    errors.currentInventoryMethod = "Current inventory method is required"
+  }
+
+  if (!data.proposedInventoryMethod) {
+    errors.proposedInventoryMethod = "Proposed inventory method is required"
+  }
+
+  if (data.currentInventoryMethod && data.proposedInventoryMethod &&
+    data.currentInventoryMethod === data.proposedInventoryMethod) {
+    errors.proposedInventoryMethod = "Proposed method must be different from current method"
+  }
+
+  // If LIFO is involved, require LIFO details
+  if (data.lifoElection && data.lifoElection !== "na") {
+    if (!data.lifoMethod) {
+      errors.lifoMethod = "LIFO method is required when LIFO election is involved"
+    }
+    if (!data.lifoPoolingMethod) {
+      warnings.lifoPoolingMethod = "LIFO pooling method should be specified"
+    }
+  }
+
+  // Section 263A validation
+  if (data.section263A === "yes" && !data.section263AMethod) {
+    errors.section263AMethod = "Section 263A method is required when UNICAP applies"
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+    warnings,
+  }
+}
+
+// Validate Schedule C data (Depreciation Changes)
+export function validateScheduleC(data: Record<string, unknown>): ValidationResult {
+  const errors: Record<string, string> = {}
+  const warnings: Record<string, string> = {}
+
+  if (!data.assetDescription) {
+    errors.assetDescription = "Asset description is required"
+  }
+
+  if (!data.currentMethod) {
+    errors.currentMethod = "Current depreciation method is required"
+  }
+
+  if (!data.proposedMethod) {
+    errors.proposedMethod = "Proposed depreciation method is required"
+  }
+
+  if (!data.changeReason) {
+    errors.changeReason = "Reason for change is required"
+  }
+
+  // Warnings for incomplete information
+  if (!data.dateAcquired) {
+    warnings.dateAcquired = "Date acquired is recommended for complete filing"
+  }
+
+  if (!data.currentLife) {
+    warnings.currentLife = "Current recovery period should be specified"
+  }
+
+  if (!data.proposedLife) {
+    warnings.proposedLife = "Proposed recovery period should be specified"
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+    warnings,
+  }
+}
+
+// Validate Schedule D data (Long-Term Contracts)
+export function validateScheduleD(data: Record<string, unknown>): ValidationResult {
+  const errors: Record<string, string> = {}
+  const warnings: Record<string, string> = {}
+
+  if (!data.contractType) {
+    errors.contractType = "Contract type is required"
+  }
+
+  if (!data.currentMethod) {
+    errors.currentMethod = "Current accounting method is required"
+  }
+
+  if (!data.proposedMethod) {
+    errors.proposedMethod = "Proposed accounting method is required"
+  }
+
+  if (!data.contractDescription) {
+    errors.contractDescription = "Contract description is required"
+  }
+
+  // Section 460 validation
+  if (data.section460Applies === "yes" && !data.lookBackMethod) {
+    warnings.lookBackMethod = "Look-back method should be specified when Section 460 applies"
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+    warnings,
+  }
+}
+
+// Validate Schedule E data (Mark-to-Market)
+export function validateScheduleE(data: Record<string, unknown>): ValidationResult {
+  const errors: Record<string, string> = {}
+  const warnings: Record<string, string> = {}
+
+  if (!data.traderStatus) {
+    errors.traderStatus = "Trader status is required"
+  }
+
+  if (!data.securityTypes) {
+    errors.securityTypes = "Security types are required"
+  }
+
+  if (!data.section475Election) {
+    errors.section475Election = "Section 475 election status is required"
+  }
+
+  // If making Section 475 election, require additional info
+  if (data.section475Election === "yes" && !data.electionYear) {
+    errors.electionYear = "Election year is required when making Section 475 election"
+  }
+
+  // Warnings for trader qualification
+  if (data.traderStatus === "yes") {
+    if (!data.tradingFrequency) {
+      warnings.tradingFrequency = "Trading frequency should be documented to support trader status"
+    }
+    if (!data.averageHoldingPeriod) {
+      warnings.averageHoldingPeriod = "Average holding period should be documented"
+    }
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+    warnings,
+  }
+}
+
+// Helper to convert FormData to object for validation
+export function formDataToObject(formData: FormData): Record<string, unknown> {
+  const obj: Record<string, unknown> = {}
+  formData.forEach((value, key) => {
+    obj[key] = value
+  })
+  return obj
 }
 
 // Format currency for display

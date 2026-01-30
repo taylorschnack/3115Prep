@@ -25,75 +25,45 @@ This document provides context for continuing development of the 3115Prep applic
 - Form 3115 Parts I-II data entry
 - Basic filing workflow
 
-### Milestone 2: DCN Database & Smart Calculations 🔄 IN PROGRESS (75%)
+### Milestone 2: DCN Database & Smart Calculations ✅ COMPLETE
 
 **Completed:**
-- ✅ DCN seed data with 22 common DCNs (`prisma/seed.ts`)
+- ✅ DCN seed data with 28 common DCNs (`prisma/seed.ts`) - Updated to Rev. Proc. 2025-23
 - ✅ DCN lookup component with search/filter (`src/components/dcn-lookup.tsx`)
 - ✅ DCN actions for database queries (`src/lib/actions/dcn.ts`)
 - ✅ Part II updated to use DCN lookup with requirement badges
 - ✅ Part III form - 8 questions (`src/components/filing-part-iii.tsx`)
 - ✅ Part IV form with Section 481(a) calculator (`src/components/filing-part-iv.tsx`)
-- ✅ Server actions for Parts III and IV (`src/lib/actions/filings.ts`)
-
-**In Progress:**
-- 🔄 Wire up Parts III and IV tabs in filing page (partial - imports added, data parsing added, but tabs still disabled and components not rendered)
-
-**Remaining:**
-- ⬜ Enable Parts III and IV tabs in filing page
-- ⬜ Add smart form routing based on DCN selection
-- ⬜ Implement Schedules A-E (as applicable based on DCN)
-- ⬜ Add enhanced validation rules
+- ✅ Server actions for Parts III, IV, and all Schedules (`src/lib/actions/filings.ts`)
+- ✅ Parts III and IV tabs wired up in filing page
+- ✅ Smart form routing - Schedules show/hide based on DCN requirements
+- ✅ Schedules A-E fully implemented with server actions
+- ✅ Enhanced validation rules with inline error display (`src/lib/validation.ts`)
+- ✅ FieldError and ValidationSummary UI components (`src/components/ui/field-error.tsx`)
 
 ### Milestone 3: PDF Generation & Polish ⬜ NOT STARTED
-- PDF generation using react-pdf
-- Form validation with comprehensive error messages
+- PDF generation using react-pdf or pdf-lib
 - Print-friendly form preview
 - Filing status tracking and completion workflow
 - Data export/import functionality
+- Dynamic completion percentage calculation
 
 ---
 
 ## Immediate Next Task
 
-**File to update**: `src/app/(app)/filings/[id]/page.tsx`
+Milestone 2 is complete. The next milestone is **PDF Generation & Polish**:
 
-The filing page currently has:
-1. Imports for FilingPartIII and FilingPartIV added
-2. Data parsing for partIIIData, partIVData, dcnDetails added
-3. BUT tabs are still disabled and placeholder content shown
+1. **PDF Generation** - Generate Form 3115 PDF from filing data
+   - Install pdf-lib or react-pdf
+   - Create PDF template matching official Form 3115
+   - Map filing data to PDF fields
+   - Add export/download button to filing page
 
-**Changes needed:**
-1. Enable the Part III and Part IV tabs (remove `disabled` prop)
-2. Replace placeholder content with actual components:
-
-```tsx
-// Replace lines 83-84:
-<TabsTrigger value="part-iii" disabled>Part III - Details</TabsTrigger>
-<TabsTrigger value="part-iv" disabled>Part IV - 481(a)</TabsTrigger>
-
-// With:
-<TabsTrigger value="part-iii">Part III - Details</TabsTrigger>
-<TabsTrigger value="part-iv">Part IV - 481(a)</TabsTrigger>
-
-// Replace Part III TabsContent (lines 102-106):
-<TabsContent value="part-iii">
-  <FilingPartIII
-    filingId={filing.id}
-    initialData={partIIIData}
-  />
-</TabsContent>
-
-// Replace Part IV TabsContent (lines 108-112):
-<TabsContent value="part-iv">
-  <FilingPartIV
-    filingId={filing.id}
-    initialData={partIVData}
-    requires481a={requires481a}
-    suggestedSpreadPeriod={suggestedSpreadPeriod}
-  />
-</TabsContent>
-```
+2. **Completion Workflow**
+   - Calculate completion percentage based on filled fields
+   - Add status transitions (draft → in_progress → ready → completed)
+   - Add filing summary/review page
 
 ---
 
@@ -132,6 +102,8 @@ npm run dev
 ## Notes
 
 - The app uses SQLite for simplicity (file: `prisma/dev.db`)
-- DCN data is based on Rev. Proc. 2023-34
+- DCN data is based on Rev. Proc. 2025-23 with 28 common DCNs
 - Section 481(a) calculator supports 1-year and 4-year spread periods
 - Part IV shows different UI based on whether 481(a) adjustment is required for the selected DCN
+- Validation is implemented with inline errors and summary boxes
+- Schedules A-E are shown dynamically based on DCN requirements

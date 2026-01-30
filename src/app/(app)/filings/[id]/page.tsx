@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DownloadPdfButton } from "@/components/download-pdf-button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getFiling } from "@/lib/actions/filings"
@@ -80,6 +81,7 @@ export default async function FilingPage({
           </p>
         </div>
         <div className="flex gap-2">
+          <DownloadPdfButton filingId={filing.id} />
           <Button variant="outline" asChild>
             <Link href={`/clients/${filing.client.id}`}>
               View Client

@@ -56,7 +56,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-3">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <FileText className="h-6 w-6 text-primary" />
+          <FileText className="h-6 w-6 text-sidebar-primary" />
           <span className="text-lg font-semibold">Form 3115 Prep</span>
         </Link>
       </SidebarHeader>

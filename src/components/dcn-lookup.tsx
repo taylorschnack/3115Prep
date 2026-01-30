@@ -86,7 +86,7 @@ export function DcnLookup({ onSelect, selectedDcn }: DcnLookupProps) {
         <DialogHeader>
           <DialogTitle>Designated Change Number (DCN) Lookup</DialogTitle>
           <DialogDescription>
-            Search for the appropriate DCN from Rev. Proc. 2023-34
+            Search for the appropriate DCN from Rev. Proc. 2025-23
           </DialogDescription>
         </DialogHeader>
 
@@ -129,9 +129,8 @@ export function DcnLookup({ onSelect, selectedDcn }: DcnLookupProps) {
               {filteredDcns.map((dcn) => (
                 <div
                   key={dcn.id}
-                  className={`p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                    selectedDcn === dcn.dcnNumber ? "border-primary bg-primary/5" : ""
-                  }`}
+                  className={`p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${selectedDcn === dcn.dcnNumber ? "border-primary bg-primary/5" : ""
+                    }`}
                   onClick={() => handleSelect(dcn)}
                 >
                   <div className="flex items-start justify-between">

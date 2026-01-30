@@ -8,11 +8,13 @@ export default async function EditClientPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const client = await getClient(id)
+  const clientWithFilings = await getClient(id)
 
-  if (!client) {
+  if (!clientWithFilings) {
     notFound()
   }
+
+  const { filings, ...client } = clientWithFilings
 
   return (
     <div className="max-w-3xl space-y-6">

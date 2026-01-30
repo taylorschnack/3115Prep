@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { updateFilingScheduleA } from "@/lib/actions/filings"
+import { toast } from "sonner"
+import { validateScheduleA, formDataToObject, type ValidationResult } from "@/lib/validation"
+import { FieldError, ValidationSummary } from "@/components/ui/field-error"
 
 interface ScheduleAData {
   currentOverallMethod?: string
@@ -29,11 +32,27 @@ interface ScheduleAProps {
 
 export function ScheduleA({ filingId, initialData }: ScheduleAProps) {
   const [saving, setSaving] = useState(false)
+  const [validation, setValidation] = useState<ValidationResult>({ isValid: true, errors: {}, warnings: {} })
 
   async function handleSubmit(formData: FormData) {
+    const data = formDataToObject(formData)
+    const validationResult = validateScheduleA(data)
+    setValidation(validationResult)
+
+    if (!validationResult.isValid) {
+      toast.error("Please fix the validation errors before saving")
+      return
+    }
+
     setSaving(true)
-    await updateFilingScheduleA(filingId, formData)
+    const result = await updateFilingScheduleA(filingId, formData)
     setSaving(false)
+
+    if (result?.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("Schedule A saved successfully")
+    }
   }
 
   return (
@@ -46,9 +65,11 @@ export function ScheduleA({ filingId, initialData }: ScheduleAProps) {
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-6">
+          <ValidationSummary errors={validation.errors} warnings={validation.warnings} />
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="currentOverallMethod">Current Overall Method</Label>
+              <Label htmlFor="currentOverallMethod">Current Overall Method *</Label>
               <RadioGroup
                 name="currentOverallMethod"
                 defaultValue={initialData?.currentOverallMethod || ""}
@@ -66,10 +87,11 @@ export function ScheduleA({ filingId, initialData }: ScheduleAProps) {
                   <Label htmlFor="current-hybrid">Hybrid</Label>
                 </div>
               </RadioGroup>
+              <FieldError error={validation.errors.currentOverallMethod} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="proposedOverallMethod">Proposed Overall Method</Label>
+              <Label htmlFor="proposedOverallMethod">Proposed Overall Method *</Label>
               <RadioGroup
                 name="proposedOverallMethod"
                 defaultValue={initialData?.proposedOverallMethod || ""}
@@ -87,6 +109,7 @@ export function ScheduleA({ filingId, initialData }: ScheduleAProps) {
                   <Label htmlFor="proposed-hybrid">Hybrid</Label>
                 </div>
               </RadioGroup>
+              <FieldError error={validation.errors.proposedOverallMethod} />
             </div>
           </div>
 
@@ -95,7 +118,7 @@ export function ScheduleA({ filingId, initialData }: ScheduleAProps) {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Does the taxpayer meet the gross receipts test under Section 448(c)?</Label>
+                <Label>Does the taxpayer meet the gross receipts test under Section 448(c)? *</Label>
                 <RadioGroup
                   name="grossReceiptsTest"
                   defaultValue={initialData?.grossReceiptsTest || ""}
@@ -109,6 +132,7 @@ export function ScheduleA({ filingId, initialData }: ScheduleAProps) {
                     <Label htmlFor="grt-no">No</Label>
                   </div>
                 </RadioGroup>
+                <FieldError error={validation.errors.grossReceiptsTest} />
               </div>
 
               <div className="space-y-2">
@@ -121,7 +145,9 @@ export function ScheduleA({ filingId, initialData }: ScheduleAProps) {
                   type="number"
                   placeholder="0.00"
                   defaultValue={initialData?.averageGrossReceipts || ""}
+                  className={validation.warnings.averageGrossReceipts ? "border-amber-500" : ""}
                 />
+                <FieldError warning={validation.warnings.averageGrossReceipts} />
                 <p className="text-xs text-muted-foreground">
                   For 2024, the threshold is $30 million
                 </p>

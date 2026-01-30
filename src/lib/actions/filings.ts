@@ -1,5 +1,30 @@
 "use server"
 
+import { generateFilingPdf } from "@/lib/pdf/generator"
+
+export async function downloadFilingPdf(filingId: string) {
+  try {
+    const filing = await db.filing.findUnique({
+      where: { id: filingId },
+      include: { client: true },
+    })
+
+    if (!filing) {
+      return { error: "Filing not found" }
+    }
+
+    const pdfBytes = await generateFilingPdf(filing);
+    // Convert to base64 to send to client
+    const base64 = Buffer.from(pdfBytes).toString('base64');
+
+    return { success: true, data: base64, filename: `f3115_${filing.client.name.replace(/\s+/g, '_')}_${filing.taxYearOfChange}.pdf` }
+  } catch (error) {
+    console.error("Error generating PDF:", error)
+    return { error: "Failed to generate PDF" }
+  }
+}
+
+
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"

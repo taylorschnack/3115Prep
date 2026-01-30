@@ -8,6 +8,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { updateFilingScheduleB } from "@/lib/actions/filings"
+import { toast } from "sonner"
+import { validateScheduleB, formDataToObject, type ValidationResult } from "@/lib/validation"
+import { FieldError, ValidationSummary } from "@/components/ui/field-error"
 
 interface ScheduleBData {
   currentInventoryMethod?: string
@@ -32,11 +35,27 @@ interface ScheduleBProps {
 
 export function ScheduleB({ filingId, initialData }: ScheduleBProps) {
   const [saving, setSaving] = useState(false)
+  const [validation, setValidation] = useState<ValidationResult>({ isValid: true, errors: {}, warnings: {} })
 
   async function handleSubmit(formData: FormData) {
+    const data = formDataToObject(formData)
+    const validationResult = validateScheduleB(data)
+    setValidation(validationResult)
+
+    if (!validationResult.isValid) {
+      toast.error("Please fix the validation errors before saving")
+      return
+    }
+
     setSaving(true)
-    await updateFilingScheduleB(filingId, formData)
+    const result = await updateFilingScheduleB(filingId, formData)
     setSaving(false)
+
+    if (result?.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("Schedule B saved successfully")
+    }
   }
 
   return (
@@ -49,11 +68,13 @@ export function ScheduleB({ filingId, initialData }: ScheduleBProps) {
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-6">
+          <ValidationSummary errors={validation.errors} warnings={validation.warnings} />
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="currentInventoryMethod">Current Inventory Cost Flow Method</Label>
+              <Label htmlFor="currentInventoryMethod">Current Inventory Cost Flow Method *</Label>
               <Select name="currentInventoryMethod" defaultValue={initialData?.currentInventoryMethod || ""}>
-                <SelectTrigger>
+                <SelectTrigger className={validation.errors.currentInventoryMethod ? "border-destructive" : ""}>
                   <SelectValue placeholder="Select method" />
                 </SelectTrigger>
                 <SelectContent>
@@ -65,12 +86,13 @@ export function ScheduleB({ filingId, initialData }: ScheduleBProps) {
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
+              <FieldError error={validation.errors.currentInventoryMethod} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="proposedInventoryMethod">Proposed Inventory Cost Flow Method</Label>
+              <Label htmlFor="proposedInventoryMethod">Proposed Inventory Cost Flow Method *</Label>
               <Select name="proposedInventoryMethod" defaultValue={initialData?.proposedInventoryMethod || ""}>
-                <SelectTrigger>
+                <SelectTrigger className={validation.errors.proposedInventoryMethod ? "border-destructive" : ""}>
                   <SelectValue placeholder="Select method" />
                 </SelectTrigger>
                 <SelectContent>
@@ -82,6 +104,7 @@ export function ScheduleB({ filingId, initialData }: ScheduleBProps) {
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
+              <FieldError error={validation.errors.proposedInventoryMethod} />
             </div>
           </div>
 
@@ -161,7 +184,7 @@ export function ScheduleB({ filingId, initialData }: ScheduleBProps) {
                 <div className="space-y-2">
                   <Label htmlFor="lifoMethod">LIFO Method</Label>
                   <Select name="lifoMethod" defaultValue={initialData?.lifoMethod || ""}>
-                    <SelectTrigger>
+                    <SelectTrigger className={validation.errors.lifoMethod ? "border-destructive" : ""}>
                       <SelectValue placeholder="Select LIFO method" />
                     </SelectTrigger>
                     <SelectContent>
@@ -171,12 +194,13 @@ export function ScheduleB({ filingId, initialData }: ScheduleBProps) {
                       <SelectItem value="ipic">IPIC Method</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FieldError error={validation.errors.lifoMethod} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="lifoPoolingMethod">LIFO Pooling Method</Label>
                   <Select name="lifoPoolingMethod" defaultValue={initialData?.lifoPoolingMethod || ""}>
-                    <SelectTrigger>
+                    <SelectTrigger className={validation.warnings.lifoPoolingMethod ? "border-amber-500" : ""}>
                       <SelectValue placeholder="Select pooling method" />
                     </SelectTrigger>
                     <SelectContent>
@@ -185,6 +209,7 @@ export function ScheduleB({ filingId, initialData }: ScheduleBProps) {
                       <SelectItem value="single-pool">Single Pool</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FieldError warning={validation.warnings.lifoPoolingMethod} />
                 </div>
               </div>
             </div>
@@ -218,7 +243,7 @@ export function ScheduleB({ filingId, initialData }: ScheduleBProps) {
               <div className="space-y-2">
                 <Label htmlFor="section263AMethod">Section 263A Method (if applicable)</Label>
                 <Select name="section263AMethod" defaultValue={initialData?.section263AMethod || ""}>
-                  <SelectTrigger>
+                  <SelectTrigger className={validation.errors.section263AMethod ? "border-destructive" : ""}>
                     <SelectValue placeholder="Select 263A method" />
                   </SelectTrigger>
                   <SelectContent>
@@ -228,6 +253,7 @@ export function ScheduleB({ filingId, initialData }: ScheduleBProps) {
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                <FieldError error={validation.errors.section263AMethod} />
               </div>
 
               <div className="space-y-2">

@@ -9,6 +9,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { updateFilingScheduleD } from "@/lib/actions/filings"
+import { toast } from "sonner"
+import { validateScheduleD, formDataToObject, type ValidationResult } from "@/lib/validation"
+import { FieldError, ValidationSummary } from "@/components/ui/field-error"
 
 interface ScheduleDData {
   contractType?: string
@@ -33,11 +36,27 @@ interface ScheduleDProps {
 
 export function ScheduleD({ filingId, initialData }: ScheduleDProps) {
   const [saving, setSaving] = useState(false)
+  const [validation, setValidation] = useState<ValidationResult>({ isValid: true, errors: {}, warnings: {} })
 
   async function handleSubmit(formData: FormData) {
+    const data = formDataToObject(formData)
+    const validationResult = validateScheduleD(data)
+    setValidation(validationResult)
+
+    if (!validationResult.isValid) {
+      toast.error("Please fix the validation errors before saving")
+      return
+    }
+
     setSaving(true)
-    await updateFilingScheduleD(filingId, formData)
+    const result = await updateFilingScheduleD(filingId, formData)
     setSaving(false)
+
+    if (result?.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("Schedule D saved successfully")
+    }
   }
 
   return (
@@ -50,11 +69,13 @@ export function ScheduleD({ filingId, initialData }: ScheduleDProps) {
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-6">
+          <ValidationSummary errors={validation.errors} warnings={validation.warnings} />
+
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="contractType">Type of Long-Term Contract</Label>
+              <Label htmlFor="contractType">Type of Long-Term Contract *</Label>
               <Select name="contractType" defaultValue={initialData?.contractType || ""}>
-                <SelectTrigger>
+                <SelectTrigger className={validation.errors.contractType ? "border-destructive" : ""}>
                   <SelectValue placeholder="Select contract type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -68,14 +89,16 @@ export function ScheduleD({ filingId, initialData }: ScheduleDProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contractDescription">Contract Description</Label>
+              <Label htmlFor="contractDescription">Contract Description *</Label>
               <Textarea
                 id="contractDescription"
                 name="contractDescription"
                 defaultValue={initialData?.contractDescription || ""}
                 placeholder="Describe the nature of the contract(s) affected by this change"
                 rows={2}
+                className={validation.errors.contractDescription ? "border-destructive" : ""}
               />
+              <FieldError error={validation.errors.contractDescription} />
             </div>
           </div>
 
@@ -84,9 +107,9 @@ export function ScheduleD({ filingId, initialData }: ScheduleDProps) {
               <h3 className="font-medium">Current Method</h3>
 
               <div className="space-y-2">
-                <Label htmlFor="currentMethod">Accounting Method</Label>
+                <Label htmlFor="currentMethod">Accounting Method *</Label>
                 <Select name="currentMethod" defaultValue={initialData?.currentMethod || ""}>
-                  <SelectTrigger>
+                  <SelectTrigger className={validation.errors.currentMethod ? "border-destructive" : ""}>
                     <SelectValue placeholder="Select method" />
                   </SelectTrigger>
                   <SelectContent>
@@ -97,6 +120,7 @@ export function ScheduleD({ filingId, initialData }: ScheduleDProps) {
                     <SelectItem value="other">Other Method</SelectItem>
                   </SelectContent>
                 </Select>
+                <FieldError error={validation.errors.currentMethod} />
               </div>
             </div>
 
@@ -104,9 +128,9 @@ export function ScheduleD({ filingId, initialData }: ScheduleDProps) {
               <h3 className="font-medium">Proposed Method</h3>
 
               <div className="space-y-2">
-                <Label htmlFor="proposedMethod">Accounting Method</Label>
+                <Label htmlFor="proposedMethod">Accounting Method *</Label>
                 <Select name="proposedMethod" defaultValue={initialData?.proposedMethod || ""}>
-                  <SelectTrigger>
+                  <SelectTrigger className={validation.errors.proposedMethod ? "border-destructive" : ""}>
                     <SelectValue placeholder="Select method" />
                   </SelectTrigger>
                   <SelectContent>

@@ -1,0 +1,94 @@
+{
+  "page_1_header": {
+    "filer_name": "topmostSubform[0].Page1[0].f1_1[0]",
+    "street_address": "topmostSubform[0].Page1[0].f1_2[0]",
+    "city_state_zip": "topmostSubform[0].Page1[0].f1_3[0]",
+    "identification_number": "topmostSubform[0].Page1[0].f1_4[0]",
+    "business_activity_code": "topmostSubform[0].Page1[0].f1_5[0]",
+    "tax_year_begins": "topmostSubform[0].Page1[0].f1_6[0]",
+    "tax_year_ends": "topmostSubform[0].Page1[0].f1_7[0]",
+    "contact_person": "topmostSubform[0].Page1[0].f1_8[0]",
+    "applicant_name": "topmostSubform[0].Page1[0].f1_9[0]",
+    "contact_phone": "topmostSubform[0].Page1[0].f1_10[0]"
+  },
+  "communication_prefs": {
+    "receive_by_fax_email_yes": "topmostSubform[0].Page1[0].c1_1[0]",
+    "receive_by_fax_email_no": "topmostSubform[0].Page1[0].c1_1[1]",
+    "consolidated_group_member": "topmostSubform[0].Page1[0].c1_2[0]",
+    "form_2848_attached": "topmostSubform[0].Page1[0].c1_3[0]"
+  },
+  "entity_type": {
+    "individual": "topmostSubform[0].Page1[0].c1_4[0]",
+    "corporation": "topmostSubform[0].Page1[0].c1_4[1]",
+    "controlled_foreign_corp": "topmostSubform[0].Page1[0].c1_4[2]",
+    "ten_fifty_corporation": "topmostSubform[0].Page1[0].c1_4[3]",
+    "qualified_personal_service_corp": "topmostSubform[0].Page1[0].c1_4[4]",
+    "exempt_org": "topmostSubform[0].Page1[0].c1_4[5]",
+    "exempt_org_code_section": "topmostSubform[0].Page1[0].f1_11[0]",
+    "cooperative": "topmostSubform[0].Page1[0].c1_4[6]",
+    "partnership": "topmostSubform[0].Page1[0].c1_4[7]",
+    "s_corporation": "topmostSubform[0].Page1[0].c1_4[8]",
+    "insurance_816a": "topmostSubform[0].Page1[0].c1_4[9]",
+    "insurance_831": "topmostSubform[0].Page1[0].c1_4[10]",
+    "other": "topmostSubform[0].Page1[0].c1_4[11]",
+    "other_description": "topmostSubform[0].Page1[0].f1_12[0]"
+  },
+  "method_change_type": {
+    "depreciation_amortization": "topmostSubform[0].Page1[0].c1_5[0]",
+    "financial_products": "topmostSubform[0].Page1[0].c1_5[1]",
+    "other": "topmostSubform[0].Page1[0].c1_5[2]",
+    "other_description": "topmostSubform[0].Page1[0].f1_13[0]"
+  },
+  "part_1_dcn": {
+    "dcn_1": "topmostSubform[0].Page1[0].f1_15[0]",
+    "dcn_2": "topmostSubform[0].Page1[0].f1_16[0]",
+    "dcn_3": "topmostSubform[0].Page1[0].f1_17[0]",
+    "dcn_4": "topmostSubform[0].Page1[0].f1_18[0]",
+    "dcn_5": "topmostSubform[0].Page1[0].f1_19[0]",
+    "dcn_6": "topmostSubform[0].Page1[0].f1_20[0]",
+    "dcn_7": "topmostSubform[0].Page1[0].f1_21[0]",
+    "dcn_8": "topmostSubform[0].Page1[0].f1_22[0]",
+    "dcn_9": "topmostSubform[0].Page1[0].f1_23[0]",
+    "dcn_10": "topmostSubform[0].Page1[0].f1_24[0]",
+    "dcn_11": "topmostSubform[0].Page1[0].f1_25[0]",
+    "dcn_12": "topmostSubform[0].Page1[0].f1_26[0]",
+    "other_checkbox": "topmostSubform[0].Page1[0].c1_6[0]",
+    "other_description": "topmostSubform[0].Page1[0].f1_14[0]"
+  },
+  "part_2_section_481a": {
+    "adjustment_amount": "topmostSubform[0].Page4[0].f4_1[0]",
+    "prior_adjustment": "topmostSubform[0].Page4[0].f4_2[0]",
+    "de_minimis_election": "topmostSubform[0].Page4[0].c4_2[0]",
+    "acquisition_election": "topmostSubform[0].Page4[0].c4_2[1]"
+  },
+  "schedule_a_overall_method": {
+    "present_cash": "topmostSubform[0].Page4[0].c4_4[0]",
+    "present_accrual": "topmostSubform[0].Page4[0].c4_4[1]",
+    "present_hybrid": "topmostSubform[0].Page4[0].c4_5[0]",
+    "proposed_cash": "topmostSubform[0].Page4[0].c4_5[1]",
+    "proposed_accrual": "topmostSubform[0].Page4[0].c4_5[2]",
+    "proposed_hybrid": "topmostSubform[0].Page4[0].c4_6[0]",
+    "income_accrued": "topmostSubform[0].Page4[0].f4_3[0]",
+    "income_received": "topmostSubform[0].Page4[0].f4_4[0]",
+    "expenses_accrued": "topmostSubform[0].Page4[0].f4_5[0]",
+    "prepaid_expenses": "topmostSubform[0].Page4[0].f4_6[0]",
+    "supplies_on_hand": "topmostSubform[0].Page4[0].f4_7[0]",
+    "inventory_on_hand": "topmostSubform[0].Page4[0].f4_8[0]",
+    "other_amounts": "topmostSubform[0].Page4[0].f4_9[0]",
+    "net_481a_adjustment": "topmostSubform[0].Page4[0].f4_10[0]"
+  },
+  "gross_receipts": {
+    "first_year_month": "topmostSubform[0].Page3[0].f3_1[0]",
+    "first_year_year": "topmostSubform[0].Page3[0].f3_2[0]",
+    "first_year_amount": "topmostSubform[0].Page3[0].f3_3[0]",
+    "second_year_month": "topmostSubform[0].Page3[0].f3_4[0]",
+    "second_year_year": "topmostSubform[0].Page3[0].f3_5[0]",
+    "second_year_amount": "topmostSubform[0].Page3[0].f3_6[0]",
+    "third_year_month": "topmostSubform[0].Page3[0].f3_7[0]",
+    "third_year_year": "topmostSubform[0].Page3[0].f3_8[0]",
+    "third_year_amount": "topmostSubform[0].Page3[0].f3_9[0]",
+    "fourth_year_month": "topmostSubform[0].Page3[0].f3_10[0]",
+    "fourth_year_year": "topmostSubform[0].Page3[0].f3_11[0]",
+    "fourth_year_amount": "topmostSubform[0].Page3[0].f3_12[0]"
+  }
+}

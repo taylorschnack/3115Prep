@@ -9,6 +9,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { updateFilingScheduleE } from "@/lib/actions/filings"
+import { toast } from "sonner"
+import { validateScheduleE, formDataToObject, type ValidationResult } from "@/lib/validation"
+import { FieldError, ValidationSummary } from "@/components/ui/field-error"
 
 interface ScheduleEData {
   traderStatus?: string
@@ -35,11 +38,27 @@ interface ScheduleEProps {
 
 export function ScheduleE({ filingId, initialData }: ScheduleEProps) {
   const [saving, setSaving] = useState(false)
+  const [validation, setValidation] = useState<ValidationResult>({ isValid: true, errors: {}, warnings: {} })
 
   async function handleSubmit(formData: FormData) {
+    const data = formDataToObject(formData)
+    const validationResult = validateScheduleE(data)
+    setValidation(validationResult)
+
+    if (!validationResult.isValid) {
+      toast.error("Please fix the validation errors before saving")
+      return
+    }
+
     setSaving(true)
-    await updateFilingScheduleE(filingId, formData)
+    const result = await updateFilingScheduleE(filingId, formData)
     setSaving(false)
+
+    if (result?.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("Schedule E saved successfully")
+    }
   }
 
   return (
@@ -52,9 +71,11 @@ export function ScheduleE({ filingId, initialData }: ScheduleEProps) {
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-6">
+          <ValidationSummary errors={validation.errors} warnings={validation.warnings} />
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Taxpayer Status</Label>
+              <Label>Taxpayer Status *</Label>
               <RadioGroup
                 name="traderStatus"
                 defaultValue={initialData?.traderStatus || ""}
@@ -72,6 +93,7 @@ export function ScheduleE({ filingId, initialData }: ScheduleEProps) {
                   <Label htmlFor="status-both">Both Dealer and Trader</Label>
                 </div>
               </RadioGroup>
+              <FieldError error={validation.errors.traderStatus} />
             </div>
 
             <div className="space-y-2">
@@ -97,9 +119,9 @@ export function ScheduleE({ filingId, initialData }: ScheduleEProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="securityTypes">Types of Securities/Commodities</Label>
+            <Label htmlFor="securityTypes">Types of Securities/Commodities *</Label>
             <Select name="securityTypes" defaultValue={initialData?.securityTypes || ""}>
-              <SelectTrigger>
+              <SelectTrigger className={validation.errors.securityTypes ? "border-destructive" : ""}>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -108,6 +130,7 @@ export function ScheduleE({ filingId, initialData }: ScheduleEProps) {
                 <SelectItem value="both">Both Securities and Commodities</SelectItem>
               </SelectContent>
             </Select>
+            <FieldError error={validation.errors.securityTypes} />
           </div>
 
           <div className="grid grid-cols-2 gap-6 border-t pt-4">
@@ -155,7 +178,7 @@ export function ScheduleE({ filingId, initialData }: ScheduleEProps) {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Section 475(f) Election Status</Label>
+                <Label>Section 475(f) Election Status *</Label>
                 <RadioGroup
                   name="section475Election"
                   defaultValue={initialData?.section475Election || ""}
@@ -177,6 +200,7 @@ export function ScheduleE({ filingId, initialData }: ScheduleEProps) {
                     <Label htmlFor="s475-na">Not Applicable (Dealer by statute)</Label>
                   </div>
                 </RadioGroup>
+                <FieldError error={validation.errors.section475Election} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -188,7 +212,9 @@ export function ScheduleE({ filingId, initialData }: ScheduleEProps) {
                     type="number"
                     defaultValue={initialData?.electionYear || ""}
                     placeholder="e.g., 2024"
+                    className={validation.errors.electionYear ? "border-destructive" : ""}
                   />
+                  <FieldError error={validation.errors.electionYear} />
                 </div>
 
                 <div className="space-y-2">

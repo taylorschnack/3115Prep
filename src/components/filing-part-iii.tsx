@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/card"
 import { updateFilingPartIII } from "@/lib/actions/filings"
 import { toast } from "sonner"
+import { validatePartIII, formDataToObject, type ValidationResult } from "@/lib/validation"
+import { FieldError, ValidationSummary } from "@/components/ui/field-error"
 
 type PartIIIData = {
   // Line 1 - Has the applicant changed this method in any prior tax year?
@@ -67,8 +69,19 @@ interface FilingPartIIIProps {
 
 export function FilingPartIII({ filingId, initialData }: FilingPartIIIProps) {
   const [saving, setSaving] = useState(false)
+  const [validation, setValidation] = useState<ValidationResult>({ isValid: true, errors: {}, warnings: {} })
 
   async function handleSubmit(formData: FormData) {
+    // Validate before submission
+    const data = formDataToObject(formData)
+    const validationResult = validatePartIII(data)
+    setValidation(validationResult)
+
+    if (!validationResult.isValid) {
+      toast.error("Please fix the validation errors before saving")
+      return
+    }
+
     setSaving(true)
     const result = await updateFilingPartIII(filingId, formData)
     setSaving(false)
@@ -91,6 +104,8 @@ export function FilingPartIII({ filingId, initialData }: FilingPartIIIProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <ValidationSummary errors={validation.errors} warnings={validation.warnings} />
+
             {/* Line 1 */}
             <div className="space-y-4 p-4 border rounded-lg">
               <div className="flex items-start gap-4">
@@ -118,7 +133,9 @@ export function FilingPartIII({ filingId, initialData }: FilingPartIIIProps) {
                         name="priorMethodChangeYear"
                         placeholder="YYYY"
                         defaultValue={initialData?.priorMethodChangeYear || ""}
+                        className={validation.errors.priorMethodChangeYear ? "border-destructive" : ""}
                       />
+                      <FieldError error={validation.errors.priorMethodChangeYear} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="priorMethodChangeDcn">DCN used</Label>
@@ -192,7 +209,9 @@ export function FilingPartIII({ filingId, initialData }: FilingPartIIIProps) {
                         name="parentName"
                         placeholder="Parent corporation name"
                         defaultValue={initialData?.parentName || ""}
+                        className={validation.errors.parentName ? "border-destructive" : ""}
                       />
+                      <FieldError error={validation.errors.parentName} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="parentEin">Parent EIN</Label>
@@ -201,7 +220,9 @@ export function FilingPartIII({ filingId, initialData }: FilingPartIIIProps) {
                         name="parentEin"
                         placeholder="XX-XXXXXXX"
                         defaultValue={initialData?.parentEin || ""}
+                        className={validation.errors.parentEin ? "border-destructive" : ""}
                       />
+                      <FieldError error={validation.errors.parentEin} />
                     </div>
                   </div>
                 </div>
@@ -266,7 +287,9 @@ export function FilingPartIII({ filingId, initialData }: FilingPartIIIProps) {
                       rows={2}
                       placeholder="Explanation..."
                       defaultValue={initialData?.booksAndRecordsExplanation || ""}
+                      className={validation.errors.booksAndRecordsExplanation ? "border-destructive" : ""}
                     />
+                    <FieldError error={validation.errors.booksAndRecordsExplanation} />
                   </div>
                 </div>
               </div>
@@ -328,7 +351,9 @@ export function FilingPartIII({ filingId, initialData }: FilingPartIIIProps) {
                       name="examiningOffice"
                       placeholder="IRS office, agent name, phone..."
                       defaultValue={initialData?.examiningOffice || ""}
+                      className={validation.errors.examiningOffice ? "border-destructive" : ""}
                     />
+                    <FieldError error={validation.errors.examiningOffice} />
                   </div>
                 </div>
               </div>
