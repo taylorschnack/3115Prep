@@ -41,12 +41,14 @@ This document provides context for continuing development of the 3115Prep applic
 - ✅ Enhanced validation rules with inline error display (`src/lib/validation.ts`)
 - ✅ FieldError and ValidationSummary UI components (`src/components/ui/field-error.tsx`)
 
-### Milestone 3: PDF Generation & Polish ⬜ NOT STARTED
-- PDF generation using react-pdf or pdf-lib
-- Print-friendly form preview
-- Filing status tracking and completion workflow
-- Data export/import functionality
-- Dynamic completion percentage calculation
+### Milestone 3: PDF Generation & Polish 🚧 IN PROGRESS
+- ✅ PDF generation using pdf-lib
+- ✅ API route for secure file download
+- ✅ Download button integration
+- ⬜ Print-friendly form preview (optional, PDF download covers this)
+- ⬜ Filing status tracking and completion workflow
+- ⬜ Data export/import functionality
+
 
 ---
 
