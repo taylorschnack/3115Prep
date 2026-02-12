@@ -23,21 +23,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { getFilings, deleteFiling } from "@/lib/actions/filings"
-
-const statusColors = {
-  draft: "secondary",
-  in_progress: "default",
-  ready: "outline",
-  completed: "default",
-} as const
-
-const statusLabels: Record<string, string> = {
-  draft: "Draft",
-  in_progress: "In Progress",
-  ready: "Ready for Review",
-  completed: "Completed",
-}
+import { getFilings } from "@/lib/actions/filings"
+import { DeleteFilingButton } from "@/components/delete-filing-button"
+import { STATUS_LABELS, STATUS_COLORS } from "@/lib/constants/filing"
 
 export default async function FilingsPage() {
   const filings = await getFilings()
@@ -107,8 +95,8 @@ export default async function FilingsPage() {
                     <TableCell>{filing.taxYearOfChange}</TableCell>
                     <TableCell>{filing.dcn || "-"}</TableCell>
                     <TableCell>
-                      <Badge variant={statusColors[filing.status as keyof typeof statusColors] || "secondary"}>
-                        {statusLabels[filing.status] || filing.status}
+                      <Badge variant={STATUS_COLORS[filing.status as keyof typeof STATUS_COLORS] || "secondary"}>
+                        {STATUS_LABELS[filing.status] || filing.status}
                       </Badge>
                     </TableCell>
                     <TableCell>{filing.updatedAt}</TableCell>
@@ -130,13 +118,9 @@ export default async function FilingsPage() {
                               View Client
                             </Link>
                           </DropdownMenuItem>
-                          <form action={deleteFiling.bind(null, filing.id)}>
-                            <DropdownMenuItem asChild>
-                              <button type="submit" className="w-full text-destructive">
-                                Delete
-                              </button>
-                            </DropdownMenuItem>
-                          </form>
+                          <DropdownMenuItem asChild>
+                            <DeleteFilingButton filingId={filing.id} />
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

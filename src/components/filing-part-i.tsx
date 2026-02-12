@@ -22,6 +22,7 @@ import { updateFilingPartI } from "@/lib/actions/filings"
 import { toast } from "sonner"
 import { validatePartI, formDataToObject, type ValidationResult } from "@/lib/validation"
 import { FieldError, ValidationSummary } from "@/components/ui/field-error"
+import { US_STATES } from "@/lib/constants/states"
 
 type Client = {
   id: string
@@ -49,14 +50,6 @@ type PartIData = {
   principalBusinessActivity?: string
   principalBusinessCode?: string
 }
-
-const usStates = [
-  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC"
-]
 
 interface FilingPartIProps {
   filingId: string
@@ -156,7 +149,7 @@ export function FilingPartI({ filingId, client, initialData }: FilingPartIProps)
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
                   <SelectContent>
-                    {usStates.map((state) => (
+                    {US_STATES.map((state) => (
                       <SelectItem key={state} value={state}>
                         {state}
                       </SelectItem>

@@ -20,22 +20,8 @@ import {
 } from "@/components/ui/table"
 import { getClient } from "@/lib/actions/clients"
 import { DeleteClientButton } from "@/components/delete-client-button"
-
-const entityTypeLabels: Record<string, string> = {
-  "c-corp": "C Corporation",
-  "s-corp": "S Corporation",
-  "partnership": "Partnership",
-  "llc": "LLC",
-  "sole-prop": "Sole Proprietorship",
-  "nonprofit": "Tax-Exempt Organization",
-}
-
-const statusLabels: Record<string, string> = {
-  draft: "Draft",
-  in_progress: "In Progress",
-  ready: "Ready",
-  completed: "Completed",
-}
+import { ENTITY_TYPE_LABELS } from "@/lib/constants/client"
+import { STATUS_LABELS } from "@/lib/constants/filing"
 
 export default async function ClientDetailPage({
   params,
@@ -60,7 +46,7 @@ export default async function ClientDetailPage({
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight">{client.name}</h1>
           <p className="text-muted-foreground">
-            {client.entityType ? entityTypeLabels[client.entityType] || client.entityType : "Entity type not specified"}
+            {client.entityType ? ENTITY_TYPE_LABELS[client.entityType] || client.entityType : "Entity type not specified"}
             {client.ein && ` • EIN: ${client.ein}`}
           </p>
         </div>
@@ -166,7 +152,7 @@ export default async function ClientDetailPage({
                     <TableCell>{filing.dcn || "-"}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        {statusLabels[filing.status] || filing.status}
+                        {STATUS_LABELS[filing.status] || filing.status}
                       </Badge>
                     </TableCell>
                     <TableCell>

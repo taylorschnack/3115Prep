@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
-import { downloadFilingPdf } from "@/lib/actions/filings"
 import { toast } from "sonner"
 
 interface DownloadPdfButtonProps {

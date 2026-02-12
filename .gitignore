@@ -45,8 +45,9 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
-nul
 
-# temporary files
+# temporary/dev artifacts
+nul
 test-output.pdf
+pdf_fields*.txt
 *_dump.txt

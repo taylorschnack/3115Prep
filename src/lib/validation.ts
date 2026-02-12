@@ -1,3 +1,5 @@
+import { US_STATES } from "@/lib/constants/states"
+
 // Form 3115 Validation Rules
 
 export type ValidationResult = {
@@ -37,15 +39,7 @@ export function validateZipCode(zip: string): boolean {
 
 // State code validation
 export function validateStateCode(state: string): boolean {
-  const validStates = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
-    'DC', 'PR', 'VI', 'GU', 'AS', 'MP'
-  ]
-  return validStates.includes(state?.toUpperCase())
+  return (US_STATES as readonly string[]).includes(state?.toUpperCase())
 }
 
 // Tax year validation

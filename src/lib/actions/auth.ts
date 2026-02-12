@@ -23,10 +23,22 @@ export async function login(formData: FormData) {
 }
 
 export async function register(formData: FormData) {
-  const email = formData.get("email") as string
+  const email = (formData.get("email") as string)?.trim()
   const password = formData.get("password") as string
-  const name = formData.get("name") as string
+  const name = (formData.get("name") as string)?.trim()
   const firmName = formData.get("firmName") as string
+
+  if (!name) {
+    return { error: "Name is required" }
+  }
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "A valid email address is required" }
+  }
+
+  if (!password || password.length < 8) {
+    return { error: "Password must be at least 8 characters" }
+  }
 
   // Check if user already exists
   const existingUser = await db.user.findUnique({

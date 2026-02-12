@@ -9,6 +9,7 @@ export const DCN_CATEGORIES = [
   { value: "bad_debts", label: "Bad Debts" },
   { value: "leasing", label: "Leasing" },
   { value: "mark_to_market", label: "Mark-to-Market" },
+  { value: "expenses", label: "Expenses" },
 ] as const
 
 export type DcnCategory = (typeof DCN_CATEGORIES)[number]["value"]

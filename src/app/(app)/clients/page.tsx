@@ -25,8 +25,20 @@ import {
 import { getClients } from "@/lib/actions/clients"
 import { ClientSearch } from "@/components/client-search"
 
-export default async function ClientsPage() {
-  const clients = await getClients()
+export default async function ClientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
+  const allClients = await getClients()
+  const clients = q
+    ? allClients.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q.toLowerCase()) ||
+          (c.ein && c.ein.toLowerCase().includes(q.toLowerCase()))
+      )
+    : allClients
 
   return (
     <div className="space-y-6">

@@ -20,6 +20,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { createClient, updateClient } from "@/lib/actions/clients"
+import { US_STATES } from "@/lib/constants/states"
+import { ENTITY_TYPES } from "@/lib/constants/client"
 
 type Client = {
   id: string
@@ -35,23 +37,6 @@ type Client = {
   contactEmail: string | null
   taxYearEnd: string | null
 }
-
-const entityTypes = [
-  { value: "c-corp", label: "C Corporation" },
-  { value: "s-corp", label: "S Corporation" },
-  { value: "partnership", label: "Partnership" },
-  { value: "llc", label: "LLC" },
-  { value: "sole-prop", label: "Sole Proprietorship" },
-  { value: "nonprofit", label: "Tax-Exempt Organization" },
-]
-
-const usStates = [
-  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC"
-]
 
 interface ClientFormProps {
   client?: Client
@@ -123,7 +108,7 @@ export function ClientForm({ client }: ClientFormProps) {
                     <SelectValue placeholder="Select entity type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {entityTypes.map((type) => (
+                    {ENTITY_TYPES.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
                       </SelectItem>
@@ -178,7 +163,7 @@ export function ClientForm({ client }: ClientFormProps) {
                     <SelectValue placeholder="State" />
                   </SelectTrigger>
                   <SelectContent>
-                    {usStates.map((state) => (
+                    {US_STATES.map((state) => (
                       <SelectItem key={state} value={state}>
                         {state}
                       </SelectItem>

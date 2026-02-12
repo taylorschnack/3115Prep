@@ -15,13 +15,7 @@ import { ScheduleB } from "@/components/schedule-b"
 import { ScheduleC } from "@/components/schedule-c"
 import { ScheduleD } from "@/components/schedule-d"
 import { ScheduleE } from "@/components/schedule-e"
-
-const statusLabels: Record<string, string> = {
-  draft: "Draft",
-  in_progress: "In Progress",
-  ready: "Ready for Review",
-  completed: "Completed",
-}
+import { STATUS_LABELS } from "@/lib/constants/filing"
 
 export default async function FilingPage({
   params,
@@ -35,15 +29,25 @@ export default async function FilingPage({
     notFound()
   }
 
-  const partIData = filing.partI ? JSON.parse(filing.partI) : null
-  const partIIData = filing.partII ? JSON.parse(filing.partII) : null
-  const partIIIData = filing.partIII ? JSON.parse(filing.partIII) : null
-  const partIVData = filing.partIV ? JSON.parse(filing.partIV) : null
-  const scheduleAData = filing.scheduleA ? JSON.parse(filing.scheduleA) : null
-  const scheduleBData = filing.scheduleB ? JSON.parse(filing.scheduleB) : null
-  const scheduleCData = filing.scheduleC ? JSON.parse(filing.scheduleC) : null
-  const scheduleDData = filing.scheduleD ? JSON.parse(filing.scheduleD) : null
-  const scheduleEData = filing.scheduleE ? JSON.parse(filing.scheduleE) : null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function safeParse(json: string | null): any {
+    if (!json) return null
+    try {
+      return JSON.parse(json)
+    } catch {
+      return null
+    }
+  }
+
+  const partIData = safeParse(filing.partI)
+  const partIIData = safeParse(filing.partII)
+  const partIIIData = safeParse(filing.partIII)
+  const partIVData = safeParse(filing.partIV)
+  const scheduleAData = safeParse(filing.scheduleA)
+  const scheduleBData = safeParse(filing.scheduleB)
+  const scheduleCData = safeParse(filing.scheduleC)
+  const scheduleDData = safeParse(filing.scheduleD)
+  const scheduleEData = safeParse(filing.scheduleE)
 
   // Extract DCN details from partII for Part IV requirements
   const dcnDetails = partIIData?.dcnDetails || null
@@ -72,7 +76,7 @@ export default async function FilingPage({
               Form 3115 - {filing.client.name}
             </h1>
             <Badge variant="secondary">
-              {statusLabels[filing.status] || filing.status}
+              {STATUS_LABELS[filing.status] || filing.status}
             </Badge>
           </div>
           <p className="text-muted-foreground">

@@ -1,11 +1,80 @@
 "use server"
 
+import { auth } from "@/lib/auth"
+import { db } from "@/lib/db"
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { generateFilingPdf } from "@/lib/pdf/generator"
+import { requireAuth, getOwnedFiling } from "@/lib/auth-helpers"
+
+/**
+ * Calculate completion percentage based on which parts and required schedules are filled.
+ * Parts I-IV are always required (4 sections).
+ * Schedules are only counted if the DCN requires them.
+ */
+function calculateCompletion(filing: {
+  partI: string | null
+  partII: string | null
+  partIII: string | null
+  partIV: string | null
+  scheduleA: string | null
+  scheduleB: string | null
+  scheduleC: string | null
+  scheduleD: string | null
+  scheduleE: string | null
+}): number {
+  // Determine required schedules from partII DCN details
+  let requiresScheduleA = false
+  let requiresScheduleB = false
+  let requiresScheduleC = false
+  let requiresScheduleD = false
+  let requiresScheduleE = false
+
+  if (filing.partII) {
+    try {
+      const partII = JSON.parse(filing.partII)
+      const dcnDetails = partII?.dcnDetails
+      if (dcnDetails) {
+        requiresScheduleA = dcnDetails.requiresScheduleA ?? false
+        requiresScheduleB = dcnDetails.requiresScheduleB ?? false
+        requiresScheduleC = dcnDetails.requiresScheduleC ?? false
+        requiresScheduleD = dcnDetails.requiresScheduleD ?? false
+        requiresScheduleE = dcnDetails.requiresScheduleE ?? false
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  const requiredSections: boolean[] = [
+    !!filing.partI,
+    !!filing.partII,
+    !!filing.partIII,
+    !!filing.partIV,
+  ]
+
+  if (requiresScheduleA) requiredSections.push(!!filing.scheduleA)
+  if (requiresScheduleB) requiredSections.push(!!filing.scheduleB)
+  if (requiresScheduleC) requiredSections.push(!!filing.scheduleC)
+  if (requiresScheduleD) requiredSections.push(!!filing.scheduleD)
+  if (requiresScheduleE) requiredSections.push(!!filing.scheduleE)
+
+  const completed = requiredSections.filter(Boolean).length
+  return Math.round((completed / requiredSections.length) * 100)
+}
 
 export async function downloadFilingPdf(filingId: string) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
   try {
-    const filing = await db.filing.findUnique({
-      where: { id: filingId },
+    const filing = await db.filing.findFirst({
+      where: {
+        id: filingId,
+        client: { userId: session.user.id },
+      },
       include: { client: true },
     })
 
@@ -14,7 +83,6 @@ export async function downloadFilingPdf(filingId: string) {
     }
 
     const pdfBytes = await generateFilingPdf(filing);
-    // Convert to base64 to send to client
     const base64 = Buffer.from(pdfBytes).toString('base64');
 
     return { success: true, data: base64, filename: `f3115_${filing.client.name.replace(/\s+/g, '_')}_${filing.taxYearOfChange}.pdf` }
@@ -23,12 +91,6 @@ export async function downloadFilingPdf(filingId: string) {
     return { error: "Failed to generate PDF" }
   }
 }
-
-
-import { auth } from "@/lib/auth"
-import { db } from "@/lib/db"
-import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 
 export async function getFilings() {
   const session = await auth()
@@ -60,7 +122,7 @@ export async function getFilings() {
     taxYearOfChange: filing.taxYearOfChange,
     dcn: filing.dcn,
     status: filing.status,
-    updatedAt: filing.updatedAt.toLocaleDateString(),
+    updatedAt: filing.updatedAt.toISOString().split("T")[0],
   }))
 }
 
@@ -86,10 +148,7 @@ export async function getFiling(id: string) {
 }
 
 export async function createFiling(formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
+  const userId = await requireAuth()
 
   const clientId = formData.get("clientId") as string
   const taxYearOfChange = parseInt(formData.get("taxYearOfChange") as string)
@@ -104,7 +163,7 @@ export async function createFiling(formData: FormData) {
 
   // Verify client ownership
   const client = await db.client.findFirst({
-    where: { id: clientId, userId: session.user.id },
+    where: { id: clientId, userId },
   })
 
   if (!client) {
@@ -125,21 +184,7 @@ export async function createFiling(formData: FormData) {
 }
 
 export async function updateFilingPartI(id: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
-
-  // Verify ownership
-  const filing = await db.filing.findFirst({
-    where: {
-      id,
-      client: {
-        userId: session.user.id,
-      },
-    },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     return { error: "Filing not found" }
   }
@@ -159,13 +204,15 @@ export async function updateFilingPartI(id: string, formData: FormData) {
     principalBusinessCode: formData.get("principalBusinessCode"),
   }
 
+  const partIJson = JSON.stringify(partIData)
+
   await db.filing.update({
     where: { id },
     data: {
-      partI: JSON.stringify(partIData),
+      partI: partIJson,
       status: "in_progress",
       lastSavedStep: "part-i",
-      completionPercentage: 25,
+      completionPercentage: calculateCompletion({ ...filing, partI: partIJson }),
     },
   })
 
@@ -174,21 +221,7 @@ export async function updateFilingPartI(id: string, formData: FormData) {
 }
 
 export async function updateFilingPartII(id: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
-
-  // Verify ownership
-  const filing = await db.filing.findFirst({
-    where: {
-      id,
-      client: {
-        userId: session.user.id,
-      },
-    },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     return { error: "Filing not found" }
   }
@@ -218,15 +251,17 @@ export async function updateFilingPartII(id: string, formData: FormData) {
     dcnDetails,
   }
 
+  const partIIJson = JSON.stringify(partIIData)
+
   await db.filing.update({
     where: { id },
     data: {
       dcn,
       changeType,
-      partII: JSON.stringify(partIIData),
+      partII: partIIJson,
       status: "in_progress",
       lastSavedStep: "part-ii",
-      completionPercentage: 50,
+      completionPercentage: calculateCompletion({ ...filing, partII: partIIJson }),
     },
   })
 
@@ -235,36 +270,17 @@ export async function updateFilingPartII(id: string, formData: FormData) {
 }
 
 export async function deleteFiling(id: string): Promise<void> {
-  const session = await auth()
-  if (!session?.user?.id) {
-    redirect("/login")
-  }
-
-  // Verify ownership
-  const filing = await db.filing.findFirst({
-    where: {
-      id,
-      client: {
-        userId: session.user.id,
-      },
-    },
-    include: {
-      client: true,
-    },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     redirect("/filings")
   }
-
-  const clientId = filing.client.id
 
   await db.filing.delete({
     where: { id },
   })
 
   revalidatePath("/filings")
-  revalidatePath(`/clients/${clientId}`)
+  revalidatePath(`/clients/${filing.clientId}`)
   redirect("/filings")
 }
 
@@ -288,21 +304,7 @@ export async function getClientsForSelect() {
 }
 
 export async function updateFilingPartIII(id: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
-
-  // Verify ownership
-  const filing = await db.filing.findFirst({
-    where: {
-      id,
-      client: {
-        userId: session.user.id,
-      },
-    },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     return { error: "Filing not found" }
   }
@@ -328,13 +330,15 @@ export async function updateFilingPartIII(id: string, formData: FormData) {
     additionalInfo: formData.get("additionalInfo"),
   }
 
+  const partIIIJson = JSON.stringify(partIIIData)
+
   await db.filing.update({
     where: { id },
     data: {
-      partIII: JSON.stringify(partIIIData),
+      partIII: partIIIJson,
       status: "in_progress",
       lastSavedStep: "part-iii",
-      completionPercentage: 75,
+      completionPercentage: calculateCompletion({ ...filing, partIII: partIIIJson }),
     },
   })
 
@@ -343,21 +347,7 @@ export async function updateFilingPartIII(id: string, formData: FormData) {
 }
 
 export async function updateFilingPartIV(id: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
-
-  // Verify ownership
-  const filing = await db.filing.findFirst({
-    where: {
-      id,
-      client: {
-        userId: session.user.id,
-      },
-    },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     return { error: "Filing not found" }
   }
@@ -383,15 +373,17 @@ export async function updateFilingPartIV(id: string, formData: FormData) {
     nolYears: formData.get("nolYears"),
   }
 
+  const partIVJson = JSON.stringify(partIVData)
+
   await db.filing.update({
     where: { id },
     data: {
-      partIV: JSON.stringify(partIVData),
+      partIV: partIVJson,
       section481aAdjustment: adjustmentAmount,
       spreadPeriod: spreadPeriodValue,
       status: "in_progress",
       lastSavedStep: "part-iv",
-      completionPercentage: 100,
+      completionPercentage: calculateCompletion({ ...filing, partIV: partIVJson }),
     },
   })
 
@@ -400,15 +392,7 @@ export async function updateFilingPartIV(id: string, formData: FormData) {
 }
 
 export async function updateFilingScheduleA(id: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
-
-  const filing = await db.filing.findFirst({
-    where: { id, client: { userId: session.user.id } },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     return { error: "Filing not found" }
   }
@@ -426,12 +410,15 @@ export async function updateFilingScheduleA(id: string, formData: FormData) {
     additionalInfo: formData.get("additionalInfo"),
   }
 
+  const scheduleAJson = JSON.stringify(scheduleAData)
+
   await db.filing.update({
     where: { id },
     data: {
-      scheduleA: JSON.stringify(scheduleAData),
+      scheduleA: scheduleAJson,
       status: "in_progress",
       lastSavedStep: "schedule-a",
+      completionPercentage: calculateCompletion({ ...filing, scheduleA: scheduleAJson }),
     },
   })
 
@@ -440,15 +427,7 @@ export async function updateFilingScheduleA(id: string, formData: FormData) {
 }
 
 export async function updateFilingScheduleB(id: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
-
-  const filing = await db.filing.findFirst({
-    where: { id, client: { userId: session.user.id } },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     return { error: "Filing not found" }
   }
@@ -469,12 +448,15 @@ export async function updateFilingScheduleB(id: string, formData: FormData) {
     additionalInfo: formData.get("additionalInfo"),
   }
 
+  const scheduleBJson = JSON.stringify(scheduleBData)
+
   await db.filing.update({
     where: { id },
     data: {
-      scheduleB: JSON.stringify(scheduleBData),
+      scheduleB: scheduleBJson,
       status: "in_progress",
       lastSavedStep: "schedule-b",
+      completionPercentage: calculateCompletion({ ...filing, scheduleB: scheduleBJson }),
     },
   })
 
@@ -483,15 +465,7 @@ export async function updateFilingScheduleB(id: string, formData: FormData) {
 }
 
 export async function updateFilingScheduleC(id: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
-
-  const filing = await db.filing.findFirst({
-    where: { id, client: { userId: session.user.id } },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     return { error: "Filing not found" }
   }
@@ -514,12 +488,15 @@ export async function updateFilingScheduleC(id: string, formData: FormData) {
     additionalInfo: formData.get("additionalInfo"),
   }
 
+  const scheduleCJson = JSON.stringify(scheduleCData)
+
   await db.filing.update({
     where: { id },
     data: {
-      scheduleC: JSON.stringify(scheduleCData),
+      scheduleC: scheduleCJson,
       status: "in_progress",
       lastSavedStep: "schedule-c",
+      completionPercentage: calculateCompletion({ ...filing, scheduleC: scheduleCJson }),
     },
   })
 
@@ -528,15 +505,7 @@ export async function updateFilingScheduleC(id: string, formData: FormData) {
 }
 
 export async function updateFilingScheduleD(id: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
-
-  const filing = await db.filing.findFirst({
-    where: { id, client: { userId: session.user.id } },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     return { error: "Filing not found" }
   }
@@ -557,12 +526,15 @@ export async function updateFilingScheduleD(id: string, formData: FormData) {
     additionalInfo: formData.get("additionalInfo"),
   }
 
+  const scheduleDJson = JSON.stringify(scheduleDData)
+
   await db.filing.update({
     where: { id },
     data: {
-      scheduleD: JSON.stringify(scheduleDData),
+      scheduleD: scheduleDJson,
       status: "in_progress",
       lastSavedStep: "schedule-d",
+      completionPercentage: calculateCompletion({ ...filing, scheduleD: scheduleDJson }),
     },
   })
 
@@ -571,15 +543,7 @@ export async function updateFilingScheduleD(id: string, formData: FormData) {
 }
 
 export async function updateFilingScheduleE(id: string, formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return { error: "Not authenticated" }
-  }
-
-  const filing = await db.filing.findFirst({
-    where: { id, client: { userId: session.user.id } },
-  })
-
+  const filing = await getOwnedFiling(id)
   if (!filing) {
     return { error: "Filing not found" }
   }
@@ -602,12 +566,15 @@ export async function updateFilingScheduleE(id: string, formData: FormData) {
     additionalInfo: formData.get("additionalInfo"),
   }
 
+  const scheduleEJson = JSON.stringify(scheduleEData)
+
   await db.filing.update({
     where: { id },
     data: {
-      scheduleE: JSON.stringify(scheduleEData),
+      scheduleE: scheduleEJson,
       status: "in_progress",
       lastSavedStep: "schedule-e",
+      completionPercentage: calculateCompletion({ ...filing, scheduleE: scheduleEJson }),
     },
   })
 

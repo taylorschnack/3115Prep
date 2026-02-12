@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge"
 import { updateFilingPartIV } from "@/lib/actions/filings"
 import { toast } from "sonner"
 import { Calculator, Info } from "lucide-react"
-import { validatePartIV, formDataToObject, type ValidationResult } from "@/lib/validation"
+import { validatePartIV, formDataToObject, formatCurrency, type ValidationResult } from "@/lib/validation"
 import { FieldError, ValidationSummary } from "@/components/ui/field-error"
 
 type PartIVData = {
@@ -122,15 +122,6 @@ export function FilingPartIV({
     } else {
       toast.success("Part IV saved successfully")
     }
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
   }
 
   return (

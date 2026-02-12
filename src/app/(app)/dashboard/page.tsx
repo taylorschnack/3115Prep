@@ -4,13 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FileText, Users, Clock, CheckCircle, Plus } from "lucide-react"
 import { getDashboardStats } from "@/lib/actions/dashboard"
-
-const statusLabels: Record<string, string> = {
-  draft: "Draft",
-  in_progress: "In Progress",
-  ready: "Ready",
-  completed: "Completed",
-}
+import { STATUS_LABELS } from "@/lib/constants/filing"
 
 export default async function DashboardPage() {
   const stats = await getDashboardStats()
@@ -121,7 +115,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="text-right">
                       <Badge variant="secondary">
-                        {statusLabels[filing.status] || filing.status}
+                        {STATUS_LABELS[filing.status] || filing.status}
                       </Badge>
                       <p className="text-xs text-muted-foreground mt-1">
                         {filing.updatedAt}

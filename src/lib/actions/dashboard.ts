@@ -66,7 +66,7 @@ export async function getDashboardStats() {
       clientName: f.client.name,
       taxYearOfChange: f.taxYearOfChange,
       status: f.status,
-      updatedAt: f.updatedAt.toLocaleDateString(),
+      updatedAt: f.updatedAt.toISOString().split("T")[0],
     })),
   }
 }
